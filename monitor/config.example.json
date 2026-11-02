@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "source_root": "/absolute/stargate-v2",
+  "recorder": "/absolute/private/recorder",
+  "output": "/absolute/public/snapshot",
+  "ledger": "/absolute/private/java-ledger",
+  "dispatch": "/absolute/private/existing-dispatch",
+  "profile": "/absolute/private/existing-sender/profile",
+  "contact_id": "3",
+  "netty_jar": "/absolute/private/inputs/proxy.jar",
+  "quarkus_family": "3.40",
+  "temurin_deployment_build": "25.0.5+8",
+  "age_tag": "v1.3.2",
+  "security_selection": "/absolute/private/security/selection.json",
+  "security_runtime_containers": "/absolute/private/security/runtime-containers.json",
+  "security_dispositions": "/absolute/private/security/dispositions.json",
+  "security_max_age_seconds": 900,
+  "ledger_max_age_seconds": 129600
+}

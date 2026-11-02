@@ -1,0 +1,22 @@
+{
+  "ubuntu_source_version": "2.39-0ubuntu8.9",
+  "local_version": "2.39-0ubuntu8.9+stargate20261024.1",
+  "architecture": "amd64",
+  "patches": [
+    {
+      "file": "patches/glibc-CVE-2026-18374.patch",
+      "sha256": "d84d9908588fa764b8727ffa4d9ada466fa00ebe283d968d471590da8b39f91f",
+      "upstream_commit": "9765a538ebf8661a6e5578e01e35a3dd30db7eb4",
+      "source": "https://sourceware.org/git/?p=glibc.git;a=patch;h=9765a538ebf8661a6e5578e01e35a3dd30db7eb4",
+      "cve": "CVE-2026-18374"
+    }
+  ],
+  "source_files_sha256": {
+    "glibc_2.39-0ubuntu8.9.dsc": "1b73a89e0910eb3e5920cde639ac7eb606256d8ee809688ff9b5912b67002711",
+    "glibc_2.39-0ubuntu8.9.debian.tar.xz": "d6114f2302896a3c8612453e1bf1d0e61603e3029ba4a7c246fbb1ab4c48d2b0",
+    "glibc_2.39.orig.tar.xz": "f77bd47cf8170c57365ae7bf86696c118adb3b120d3259c64c502d3dc1e2d926"
+  },
+  "source_auxiliary_files_sha256": {
+    "glibc_2.39.orig.tar.xz.asc": "2cce427ef7933c17379f5514e4f0ccf8dffae5bf8c72f0f7e0bf8b8401f34be5"
+  }
+}

@@ -1,0 +1,12 @@
+# UNINSTALLED TEMPLATE: select the calendar/timezone and review the service first.
+[Unit]
+Description=Run Stargate release observations and alert consumer daily
+
+[Timer]
+OnCalendar=@DAILY_ON_CALENDAR@
+Persistent=true
+AccuracySec=1min
+Unit=stargate-daily-alert-consumer.service
+
+[Install]
+WantedBy=timers.target

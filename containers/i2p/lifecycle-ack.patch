@@ -1,0 +1,149 @@
+--- a/libi2pd_client/ClientContext.h
++++ b/libi2pd_client/ClientContext.h
+@@ -138,8 +138,9 @@
+ 
+ 		private:
+ 
+-			void ReadTunnels ();
+-			void ReadTunnels (const std::string& tunConf, int& numClientTunnels, int& numServerTunnels);
++			std::string ReadTunnels ();
++			void AcknowledgeTunnels (const std::string& generation);
++			void ReadTunnels (const std::string& tunConf, int& numClientTunnels, int& numServerTunnels, std::string * generation = nullptr);
+ 			int ReadTunnelsBySection (const std::string& tunConf, boost::property_tree::ptree& pt);
+ 			void AddSection (boost::property_tree::ptree& pt, const std::string& name, const std::string& chunk, int& numSections);
+ 			void ReadHttpProxy ();
+--- a/libi2pd_client/ClientContext.cpp
++++ b/libi2pd_client/ClientContext.cpp
+@@ -8,6 +8,7 @@
+ 
+ #include <fstream>
+ #include <filesystem>
++#include <unistd.h>
+ #include <iostream>
+ #include <sstream>
+ #include <boost/property_tree/ptree.hpp>
+@@ -56,7 +57,7 @@
+ 		ReadSocksProxy ();
+ 
+ 		// I2P tunnels
+-		ReadTunnels ();
++		auto generation = ReadTunnels ();
+ 
+ 		// SAM
+ 		bool sam; i2p::config::GetOption("sam.enabled", sam);
+@@ -124,6 +125,7 @@
+ 		for (auto& it: m_TorrentsRPCServers)
+ 			it.second->Start ();
+ #endif
++		AcknowledgeTunnels (generation);
+ 	}
+ 
+ 	std::shared_ptr<I2PService> ClientContext::DetachHttpProxy ()
+@@ -269,7 +271,7 @@
+ 		// reset isUpdated for each tunnel
+ 		VisitTunnels (false);
+ 		// reload tunnels
+-		ReadTunnels();
++		auto generation = ReadTunnels();
+ 		// delete not updated tunnels (not in config anymore)
+ 		VisitTunnels (true);
+ 
+@@ -285,6 +287,7 @@
+ 				it = m_Destinations.erase (it);
+ 			}
+ 		}
++		AcknowledgeTunnels (generation);
+ 	}
+ 
+ 	bool ClientContext::LoadPrivateKeys (i2p::data::PrivateKeys& keys, std::string_view filename,
+@@ -599,8 +602,9 @@
+ 		return w;
+ 	}
+ 
+-	void ClientContext::ReadTunnels ()
+-	{
++	std::string ClientContext::ReadTunnels ()
++	{
++		std::string generation;
+ 		int numClientTunnels = 0, numServerTunnels = 0;
+ 		std::string tunConf; i2p::config::GetOption("tunconf", tunConf);
+ 		if (tunConf.empty ())
+@@ -609,7 +613,7 @@
+ 		if (i2p::fs::Exists (tunConf))
+ 		{
+             LogPrint(eLogDebug, "Clients: Tunnels config file: ", tunConf);
+-            ReadTunnels (tunConf, numClientTunnels, numServerTunnels);
++            ReadTunnels (tunConf, numClientTunnels, numServerTunnels, &generation);
+         }
+ 
+ 		std::string tunDir; i2p::config::GetOption("tunnelsdir", tunDir);
+@@ -636,6 +640,7 @@
+ 
+ 		LogPrint (eLogInfo, "Clients: ", numClientTunnels, " I2P client tunnels created");
+ 		LogPrint (eLogInfo, "Clients: ", numServerTunnels, " I2P server tunnels created");
++		return generation;
+ 	}
+ 
+ 	void ClientContext::AddSection (boost::property_tree::ptree& pt, const std::string& name,
+@@ -682,12 +687,13 @@
+ 		return numSections;
+ 	}
+ 
+-	void ClientContext::ReadTunnels (const std::string& tunConf, int& numClientTunnels, int& numServerTunnels)
++	void ClientContext::ReadTunnels (const std::string& tunConf, int& numClientTunnels, int& numServerTunnels, std::string * generation)
+ 	{
+ 		boost::property_tree::ptree pt;
+ 		try {
+ 			boost::property_tree::read_ini (tunConf, pt);
+ 		} catch (std::exception& ex) {
++			generation = nullptr; // Partial/reopened fallback is not one acknowledged snapshot.
+ 			LogPrint (eLogWarning, "Clients: Can't read ", tunConf, ": ", ex.what ());
+ 			pt.clear ();
+ 			int numSections = ReadTunnelsBySection (tunConf, pt);
+@@ -701,6 +707,14 @@
+ 			std::string name = section.first;
+ 			try
+ 			{
++				if (name == "stargate-lifecycle")
++				{
++					auto value = section.second.get<std::string> ("generation", "");
++					if (value.size () != 32 || value.find_first_not_of ("0123456789abcdef") != std::string::npos)
++						throw std::runtime_error ("Invalid lifecycle generation");
++					if (generation) *generation = value;
++					continue;
++				}
+ 				std::string type = section.second.get<std::string> (I2P_TUNNELS_SECTION_TYPE);
+ 				if (type == I2P_TUNNELS_SECTION_TYPE_CLIENT
+ 					|| type == I2P_TUNNELS_SECTION_TYPE_SOCKS
+@@ -1138,6 +1152,31 @@
+ 		}
+ 	}
+ 
++	// Acknowledge the parsed snapshot only after native cleanup. This is not network readiness.
++	void ClientContext::AcknowledgeTunnels (const std::string& generation)
++	{
++		if (generation.empty ()) return;
++		std::string path; i2p::config::GetOption ("tunconf", path);
++		if (path.empty ()) path = i2p::fs::DataDirPath ("tunnels.conf");
++		path += ".applied";
++		auto temp = path + ".XXXXXX";
++		int fd = mkstemp (temp.data ()); // private exclusive file; never follow a pre-existing temp symlink
++		if (fd < 0) return;
++		auto text = generation + " " + std::to_string (getpid ()) + "\n";
++		size_t offset = 0;
++		while (offset < text.size ())
++		{
++			auto count = write (fd, text.data () + offset, text.size () - offset);
++			if (count < 0 && errno == EINTR) continue;
++			if (count <= 0) break;
++			offset += count;
++		}
++		bool success = close (fd) == 0 && offset == text.size ();
++		std::error_code error;
++		if (success) std::filesystem::rename (temp, path, error);
++		if (!success || error) std::filesystem::remove (temp, error);
++	}
++
+ 	void ClientContext::ReadHttpProxy ()
+ 	{
+ 		std::shared_ptr<ClientDestination> localDestination;

@@ -1,0 +1,12 @@
+# Optional sanitized Java consumer outcome; see docs/java-monitor.md.
+services:
+  app:
+    environment:
+      STARGATE_CONSUMER_MAX_AGE_SECONDS: ${STARGATE_CONSUMER_MAX_AGE_SECONDS:?Select a consumer freshness limit in seconds}
+    volumes:
+      - type: bind
+        source: ${STARGATE_CONSUMER_SNAPSHOT_FILE:?Use the release monitor launcher}
+        target: /run/consumer-monitor-snapshot.json
+        read_only: true
+        bind:
+          create_host_path: false

@@ -1,0 +1,27 @@
+# Uninstalled operator template for this host's existing Caddy certificate.
+# Install only the reviewed root-owned helper; never execute a checkout as root.
+[Unit]
+Description=Stage existing Caddy certificate for Stargate TLS reload
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+WorkingDirectory=/
+UMask=0077
+ExecStart=/usr/bin/java -XX:ErrorFile=/dev/null -XX:-CreateCoredumpOnCrash --source 25 /usr/local/libexec/SyncTlsCertificate.java --certificate /var/lib/caddy/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory/gate.example.org/gate.example.org.crt --key /var/lib/caddy/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory/gate.example.org/gate.example.org.key --output /srv/stargate/tls --uid 10001
+UnsetEnvironment=JAVA_TOOL_OPTIONS JDK_JAVA_OPTIONS _JAVA_OPTIONS CLASSPATH
+TimeoutStartSec=30
+TimeoutStopSec=5
+KillMode=control-group
+Restart=no
+RemainAfterExit=no
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateNetwork=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/stargate/tls
+CapabilityBoundingSet=CAP_CHOWN CAP_DAC_OVERRIDE CAP_FOWNER
+StandardOutput=journal
+StandardError=journal

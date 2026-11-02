@@ -1,0 +1,20 @@
+[Unit]
+Description=Stargate verified image updater (operator authority)
+After=docker.service
+
+[Service]
+Type=simple
+ExecStart=@ABSOLUTE_JAVA@ -XX:-UsePerfData -jar @INSTALL_DIRECTORY@/updater.jar serve @INSTALL_DIRECTORY@/config.json
+WorkingDirectory=@INSTALL_DIRECTORY@
+UMask=0077
+NoNewPrivileges=yes
+# User-service PrivateTmp implies a user namespace that hides host-root UIDs.
+# Host ancestry/socket ownership checks require the original host UID view.
+PrivateTmp=no
+Restart=on-failure
+RestartSec=5
+KillMode=control-group
+TimeoutStopSec=30
+
+[Install]
+WantedBy=default.target

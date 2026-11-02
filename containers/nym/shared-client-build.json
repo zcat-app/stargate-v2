@@ -1,0 +1,12 @@
+{
+  "sourceCommit": "28904698fd68337cc722d51ab21f29f4fd6c56ce",
+  "patchSha256": "ad98a7adf558a3683db1fa934c43776867740ea989e6f51a141b3bb49747699c",
+  "sourceSha256": {
+    "common/socks5/proxy-helpers/src/connection_controller.rs": "6dd9915a0fdf6b7ad75650ab253417f6f18e8999fef6f37fb3f8a7f90ed5fbcc",
+    "common/socks5-client-core/src/socks/server.rs": "fd701ad542de7ba108f9912a2b482e61e722ab1a4622fd5ad4693a7b938ea9f6",
+    "common/client-core/src/client/transmission_buffer.rs": "2853fec909531666af9c05826b90cd8df6e1c4e6fd63897ea0cc075602daa6e4",
+    "common/client-core/src/client/real_messages_control/real_traffic_stream.rs": "b74cb83235cfc5c29aea17ccc5854b46a338ee4befb1deb9d469f9d5e64e1ae7",
+    "common/client-core/src/client/real_messages_control/message_handler.rs": "407b31c96024f7bc48f34d2e51fef48925885fdb0c5d2c629fc52c779221aea3",
+    "common/client-core/src/client/real_messages_control/acknowledgement_control/action_controller.rs": "b3194883bddd61b0f05fadba425cd7a5b8c509ff0ab58916e7d35e7a78f2e9d2"
+  }
+}

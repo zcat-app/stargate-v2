@@ -1,0 +1,17 @@
+# UNINSTALLED TEMPLATE: substitute every @...@ value and review before installing.
+# Command placeholders are complete systemd-quoted argument tokens; see the runbook.
+# Add optional observer arguments only after explicitly selecting their inputs.
+[Unit]
+Description=Stargate daily release observations and alert consumer
+
+[Service]
+Type=oneshot
+UMask=0077
+ExecStart=@ABSOLUTE_JAVA@ -XX:ErrorFile=/dev/null -XX:-CreateCoredumpOnCrash -jar @MONITOR_JAR@ run --config @MONITOR_CONFIG@
+TimeoutStartSec=@TIMEOUT_START_SECONDS@
+TimeoutStopSec=10
+KillMode=control-group
+Restart=no
+RemainAfterExit=no
+StandardOutput=journal
+StandardError=journal

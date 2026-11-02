@@ -1,0 +1,12 @@
+# Mount only existing sanitized Java-monitor output; see docs/java-monitor.md.
+services:
+  app:
+    environment:
+      STARGATE_RELEASE_MAX_AGE_SECONDS: ${STARGATE_RELEASE_MAX_AGE_SECONDS:?Select a freshness limit in seconds}
+    volumes:
+      - type: bind
+        source: ${STARGATE_RELEASE_SNAPSHOT_FILE:?Use the release monitor launcher}
+        target: /run/release-monitor-snapshot.json
+        read_only: true
+        bind:
+          create_host_path: false

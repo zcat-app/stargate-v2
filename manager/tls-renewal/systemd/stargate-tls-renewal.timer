@@ -1,0 +1,13 @@
+# Uninstalled operator template; review the service before enabling.
+[Unit]
+Description=Check existing Caddy certificate for Stargate renewal hourly
+
+[Timer]
+OnCalendar=hourly
+Persistent=true
+RandomizedDelaySec=5min
+AccuracySec=1min
+Unit=stargate-tls-renewal.service
+
+[Install]
+WantedBy=timers.target

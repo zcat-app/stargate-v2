@@ -1,0 +1,58 @@
+{
+  "scope": "New host-only bootstrap archive codecs and their packaged transitives, not product runtime dependencies",
+  "observedAt": "2026-10-31T20:35:18.356Z",
+  "packages": [
+    {
+      "coordinate": "org.apache.commons:commons-compress",
+      "version": "1.28.0",
+      "cachedJarSha256": "e1522945218456f3649a39bc4afd70ce4bd466221519dba7d378f2141a4642ca",
+      "osvCandidates": []
+    },
+    {
+      "coordinate": "org.tukaani:xz",
+      "version": "1.12",
+      "cachedJarSha256": "3e158a87bd73d8afb4b6e8239c013b7d049c48563f45860ce99cd2e448cf4a6b",
+      "osvCandidates": []
+    },
+    {
+      "coordinate": "commons-codec:commons-codec",
+      "version": "1.22.1",
+      "cachedJarSha256": "78a5d732fbd715e2d10bd7150d2f8030bae57267f8aacc5c88f642cb6c2e5d3f",
+      "osvCandidates": []
+    },
+    {
+      "coordinate": "commons-io:commons-io",
+      "version": "2.22.0",
+      "cachedJarSha256": "2b9a7b1f726fb86216dbd2c8321eabe0221dbd5b1be81c18e1cb53811b104758",
+      "osvCandidates": []
+    },
+    {
+      "coordinate": "org.apache.commons:commons-lang3",
+      "version": "3.20.0",
+      "cachedJarSha256": "69e5c9fa35da7a51a5fd2099dfe56a2d8d32cf233e2f6d770e796146440263f4",
+      "osvCandidates": []
+    }
+  ],
+  "osv": {
+    "requestPath": null,
+    "requestSha256": "71999d7ebe243cd6f0869f9e4c5d3fd92f701476087efbcbe0811d0753ff4f53",
+    "responsePath": null,
+    "responseSha256": "75f196f26b823bd31225287828f28e3ce63dda93cce61d54965a97dd460b3faf",
+    "validatedResults": 5,
+    "privateEvidenceOmitted": true,
+    "note": "Raw request and response remain private development evidence; original hashes retained, not publicly downloadable files."
+  },
+  "sources": [
+    "https://commons.apache.org/proper/commons-compress/security.html",
+    "https://commons.apache.org/proper/commons-compress/changes.html",
+    "https://tukaani.org/xz/java.html",
+    "https://raw.githubusercontent.com/tukaani-project/xz-java/v1.12/COPYING"
+  ],
+  "limits": [
+    "No candidates returned by the selected Maven-version advisory query; not evidence of complete coverage or vulnerability absence",
+    "Artifact hashes identify cached Maven bytes; resolution follows the existing Maven/repository trust policy, not an independent signature certification",
+    "Only host bootstrap-tools depends on these codecs; not copied into app/Tor/I2P/Nym images",
+    "Existing Jackson/BOM dependencies and host native tools are outside this newly-added-dependency check"
+  ],
+  "attribution": "Preserve each new Apache dependency LICENSE/NOTICE independently to avoid shaded-resource collisions, plus the upstream XZ license."
+}

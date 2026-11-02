@@ -1,0 +1,90 @@
+services:
+  app:
+    image: stargate-v2-app:local
+    pull_policy: never
+    build:
+      context: ./target/container
+      dockerfile: ../../containers/Dockerfile
+      target: app
+    environment:
+      STARGATE_MANAGER_ORIGIN: http://127.0.0.1:${STARGATE_MANAGER_PORT:-9080}
+      STARGATE_PROXY_PORT: ${STARGATE_PROXY_PORT:-8881}
+      STARGATE_MAX_CONNECTIONS:
+    ports:
+      - "127.0.0.1:${STARGATE_MANAGER_PORT:-9080}:9080"
+      - "127.0.0.1:${STARGATE_PROXY_PORT:-8881}:8881"
+    volumes:
+      - app-data:/data
+      - tor-control:/run/tor-control:ro
+      - i2p-control:/run/i2p-control
+    healthcheck:
+      test: ["CMD", "/opt/java/bin/java", "-cp", "/app/proxy.jar", "app.zcat.stargate.runtime.Supervisor", "--initialized", "/run/i2p-control/i2pd.conf"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    tmpfs:
+      - /tmp:mode=1777
+      - /run/stargate:uid=10001,gid=10001,mode=0700
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 256
+    mem_limit: ${STARGATE_APP_MEMORY_LIMIT-512m}
+    stop_grace_period: 20s
+    restart: unless-stopped
+    depends_on: [tor]
+    networks: [frontend, backend]
+  tor:
+    image: stargate-v2-tor:local
+    pull_policy: never
+    build:
+      context: ./target/container
+      dockerfile: ../../containers/Dockerfile
+      target: tor
+    volumes:
+      - tor-data:/var/lib/tor
+      - tor-control:/run/tor-control
+    tmpfs:
+      - /tmp:mode=1777
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 128
+    mem_limit: 256m
+    stop_grace_period: 15s
+    restart: unless-stopped
+    networks: [backend, egress]
+  i2p:
+    image: stargate-v2-i2p:local
+    pull_policy: never
+    build:
+      context: ./target/container
+      dockerfile: ../../containers/Dockerfile
+      target: i2p
+    volumes:
+      - i2p-data:/var/lib/i2pd
+      - i2p-control:/run/i2p-control
+    tmpfs:
+      - /tmp:mode=1777
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 128
+    mem_limit: 384m
+    stop_grace_period: 20s
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+    networks: [backend, egress]
+networks:
+  frontend: {}
+  backend:
+    internal: true
+  egress: {}
+volumes:
+  app-data: {}
+  tor-data: {}
+  tor-control: {}
+  i2p-data: {}
+  i2p-control: {}

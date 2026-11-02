@@ -1,0 +1,409 @@
+diff --git a/common/client-core/src/client/real_messages_control/acknowledgement_control/action_controller.rs b/common/client-core/src/client/real_messages_control/acknowledgement_control/action_controller.rs
+index 4e1d41b..722e97d 100644
+--- a/common/client-core/src/client/real_messages_control/acknowledgement_control/action_controller.rs
++++ b/common/client-core/src/client/real_messages_control/acknowledgement_control/action_controller.rs
+@@ -273,3 +273,50 @@ impl ActionController {
+         tracing::debug!("ActionController: Exiting");
+     }
+ }
++
++#[cfg(test)]
++mod shared_client_tests {
++    use super::*;
++    use crate::client::real_messages_control::message_handler::send_registered_replies;
++    use nym_sphinx::anonymous_replies::requests::AnonymousSenderTag;
++    use nym_sphinx::chunking::fragment::Fragment;
++
++    #[tokio::test]
++    async fn immediate_reply_send_starts_retry_timers_for_every_fragment() {
++        // Exercise single-SURB and multi-lane reply registration through the exact
++        // production dispatch helper. The downstream consumer signals immediately.
++        for count in [1u8, 2u8] {
++            let (actions, incoming) = mpsc::unbounded();
++            let (retransmit, mut retries) = mpsc::unbounded();
++            let mut controller = ActionController::new(
++                Config::new(Duration::from_millis(1), 1.0), retransmit, incoming);
++            let pending: Vec<_> = (1..=count).map(|id| {
++                let fragment = Fragment::try_from_bytes(&[0x80, 0, 0, id, 1, 1, 0, 42]).unwrap();
++                PendingAcknowledgement::new_anonymous(fragment,
++                    SphinxDelay::new_from_millis(0), AnonymousSenderTag::from([0u8; 16]), false, None)
++            }).collect();
++            let ids: Vec<_> = pending.iter().map(|ack| ack.inner_fragment_identifier()).collect();
++            let sent_actions = actions.clone();
++            send_registered_replies(&actions, &ShutdownToken::new(), pending, async {
++                for id in &ids {
++                    sent_actions.unbounded_send(Action::StartTimer(*id)).unwrap();
++                }
++            }).await;
++            for _ in 0..=count {
++                let action = controller.incoming_actions.next().await.unwrap();
++                controller.process_action(action);
++            }
++            assert!(ids.iter().all(|id| controller.pending_acks_data[id].1.is_some()),
++                "a first-send notification must never precede ACK registration");
++            let mut retried = Vec::new();
++            for _ in 0..count {
++                let expired = tokio::time::timeout(Duration::from_secs(1),
++                    controller.pending_acks_timers.next()).await.unwrap().unwrap();
++                controller.handle_expired_ack_timer(expired);
++                let retry = retries.next().await.unwrap().upgrade().unwrap();
++                retried.push(retry.inner_fragment_identifier());
++            }
++            assert!(ids.iter().all(|id| retried.contains(id)));
++        }
++    }
++}
+diff --git a/common/client-core/src/client/real_messages_control/message_handler.rs b/common/client-core/src/client/real_messages_control/message_handler.rs
+index bef595c..509daeb 100644
+--- a/common/client-core/src/client/real_messages_control/message_handler.rs
++++ b/common/client-core/src/client/real_messages_control/message_handler.rs
+@@ -346,8 +346,10 @@ where
+             TransmissionLane::General
+         };
+ 
+-        self.forward_messages(vec![real_messages], lane).await;
+-        self.insert_pending_acks(vec![pending_ack]);
++        let action_sender = self.action_sender.clone();
++        let shutdown_token = self.shutdown_token.clone();
++        send_registered_replies(&action_sender, &shutdown_token, vec![pending_ack],
++            self.forward_messages(vec![real_messages], lane)).await;
+         Ok(())
+     }
+ 
+@@ -444,11 +446,13 @@ where
+             pending_acks.push(pending_ack);
+         }
+ 
+-        for (lane, real_messages) in to_forward {
+-            self.forward_messages(real_messages, lane).await;
+-        }
+-
+-        self.insert_pending_acks(pending_acks);
++        let action_sender = self.action_sender.clone();
++        let shutdown_token = self.shutdown_token.clone();
++        send_registered_replies(&action_sender, &shutdown_token, pending_acks, async {
++            for (lane, real_messages) in to_forward {
++                self.forward_messages(real_messages, lane).await;
++            }
++        }).await;
+         Ok(())
+     }
+ 
+@@ -732,3 +736,19 @@ where
+         }
+     }
+ }
++
++// Register every fragment before polling any forwarding operation. Its first send (or
++// even its ACK) may immediately enqueue an action through another sender on this FIFO.
++pub(super) async fn send_registered_replies(
++    action_sender: &AckActionSender,
++    shutdown_token: &ShutdownToken,
++    pending_acks: Vec<PendingAcknowledgement>,
++    forward: impl std::future::Future<Output = ()>,
++) {
++    if let Err(err) = action_sender.unbounded_send(Action::new_insert(pending_acks)) {
++        if !shutdown_token.is_cancelled() {
++            error!("Failed to send insert action to the controller: {err}");
++        }
++    }
++    forward.await;
++}
+diff --git a/common/client-core/src/client/real_messages_control/real_traffic_stream.rs b/common/client-core/src/client/real_messages_control/real_traffic_stream.rs
+index 0c380b9..00d3b2f 100644
+--- a/common/client-core/src/client/real_messages_control/real_traffic_stream.rs
++++ b/common/client-core/src/client/real_messages_control/real_traffic_stream.rs
+@@ -317,7 +317,7 @@ where
+ 
+         // In addition to closing connections on receiving messages throught client_connection_rx,
+         // also close connections when sufficiently stale.
+-        self.transmission_buffer.prune_stale_connections();
++        self.transmission_buffer.prune_stale_connections(&mut self.lane_queue_lengths);
+ 
+         // JS: Not entirely sure why or how it fixes stuff, but without the yield call,
+         // the UnboundedReceiver [of mix_rx] will not get a chance to read anything
+@@ -339,7 +339,7 @@ where
+     fn on_close_connection(&mut self, connection_id: ConnectionId) {
+         tracing::debug!("Removing lane for connection: {connection_id}");
+         self.transmission_buffer
+-            .remove(&TransmissionLane::ConnectionId(connection_id));
++            .remove_with_queue_lengths(&TransmissionLane::ConnectionId(connection_id), &mut self.lane_queue_lengths);
+     }
+ 
+     fn current_average_message_sending_delay(&self) -> Duration {
+diff --git a/common/client-core/src/client/transmission_buffer.rs b/common/client-core/src/client/transmission_buffer.rs
+index 7449f28..5e52b2d 100644
+--- a/common/client-core/src/client/transmission_buffer.rs
++++ b/common/client-core/src/client/transmission_buffer.rs
+@@ -4,7 +4,7 @@
+ use crate::client::helpers::{Instant, get_time_now};
+ use crate::client::real_messages_control::real_traffic_stream::RealMessage;
+ use nym_sphinx::chunking::fragment::Fragment;
+-use nym_task::connections::TransmissionLane;
++use nym_task::connections::{LaneQueueLengths, TransmissionLane};
+ use rand::{Rng, RngExt, seq::IndexedRandom};
+ use std::{
+     collections::{HashMap, HashSet, VecDeque},
+@@ -64,6 +64,15 @@ impl<T> TransmissionBuffer<T> {
+         self.buffer.remove(lane)
+     }
+ 
++    pub(crate) fn remove_with_queue_lengths(
++        &mut self,
++        lane: &TransmissionLane,
++        lengths: &mut LaneQueueLengths,
++    ) {
++        self.remove(lane);
++        lengths.set(lane, None);
++    }
++
+     #[cfg(not(target_arch = "wasm32"))]
+     pub(crate) fn lanes(&self) -> Vec<TransmissionLane> {
+         self.buffer.keys().cloned().collect()
+@@ -222,7 +231,7 @@ impl<T> TransmissionBuffer<T> {
+         Some((lane, msg))
+     }
+ 
+-    pub(crate) fn prune_stale_connections(&mut self) {
++    pub(crate) fn prune_stale_connections(&mut self, lengths: &mut LaneQueueLengths) {
+         let stale_entries: Vec<_> = self
+             .buffer
+             .iter()
+@@ -231,7 +240,7 @@ impl<T> TransmissionBuffer<T> {
+             .collect();
+ 
+         for lane in stale_entries {
+-            self.remove(&lane);
++            self.remove_with_queue_lengths(&lane, lengths);
+         }
+     }
+ }
+@@ -291,3 +300,36 @@ impl<T> LaneBufferEntry<T> {
+         self.items.is_empty()
+     }
+ }
++
++#[cfg(test)]
++mod shared_client_tests {
++    use super::*;
++
++    #[test]
++    fn removed_and_stale_lanes_clear_published_lengths_without_touching_live_lanes() {
++        let mut buffer = TransmissionBuffer::<u8>::new();
++        let mut lengths = LaneQueueLengths::new();
++        let live = TransmissionLane::ConnectionId(1);
++        buffer.buffer.insert(live, LaneBufferEntry::new(VecDeque::from([1])));
++        lengths.set(&live, Some(1));
++        for id in 2..10_002 {
++            let lane = TransmissionLane::ConnectionId(id);
++            let mut entry = LaneBufferEntry::new(VecDeque::from([2, 3]));
++            if id % 2 == 0 {
++                entry.time_for_last_activity = get_time_now() - Duration::from_secs(MSG_CONSIDERED_STALE_AFTER_SECS + 1);
++            }
++            buffer.buffer.insert(lane, entry);
++            lengths.set(&lane, Some(2));
++            if id % 2 == 0 {
++                buffer.prune_stale_connections(&mut lengths);
++            } else {
++                buffer.remove_with_queue_lengths(&lane, &mut lengths);
++            }
++            assert_eq!(lengths.get(&lane), None);
++            assert_eq!(lengths.total(), 1);
++            assert_eq!(buffer.lane_length(&live), Some(1));
++            assert_eq!(buffer.buffer.len(), 1);
++            assert_eq!(lengths.lock().unwrap().map.len(), 1);
++        }
++    }
++}
+diff --git a/common/socks5-client-core/src/socks/server.rs b/common/socks5-client-core/src/socks/server.rs
+index 278435a..e641d07 100644
+--- a/common/socks5-client-core/src/socks/server.rs
++++ b/common/socks5-client-core/src/socks/server.rs
+@@ -69,7 +69,7 @@ impl NymSocksServer {
+         info!("Serving Connections...");
+ 
+         // controller for managing all active connections
+-        let (mut active_streams_controller, controller_sender) = Controller::new(
++        let (mut active_streams_controller, controller_sender) = Controller::new_local_client(
+             client_connection_tx,
+             //BroadcastActiveConnections::Off,
+             self.shutdown.clone_shutdown_token(),
+diff --git a/common/socks5/proxy-helpers/src/connection_controller.rs b/common/socks5/proxy-helpers/src/connection_controller.rs
+index e538ebe..e85eb84 100644
+--- a/common/socks5/proxy-helpers/src/connection_controller.rs
++++ b/common/socks5/proxy-helpers/src/connection_controller.rs
+@@ -76,11 +76,13 @@ struct ActiveConnection {
+ 
+ impl ActiveConnection {
+     fn write_to_buf(&mut self, seq: u64, payload: Vec<u8>, is_closed: bool) {
+-        if is_closed {
+-            self.closed_at_index = Some(seq);
+-        }
+         if let Err(err) = self.ordered_buffer.write(seq, payload) {
+-            error!("failed to write to the buffer: {err}")
++            error!("failed to write to the buffer: {err}");
++            return;
++        }
++        // A rejected duplicate/invalid frame must not close a healthy stream.
++        if is_closed {
++            self.closed_at_index = Some(self.closed_at_index.map_or(seq, |old| old.min(seq)));
+         }
+     }
+ 
+@@ -99,6 +101,7 @@ pub enum BroadcastActiveConnections {
+ /// proxy.
+ pub struct Controller {
+     active_connections: HashMap<ConnectionId, ActiveConnection>,
++    locally_initiated: bool,
+     receiver: ControllerReceiver,
+ 
+     // TODO: this will need to be either completely removed (from code) or periodically cleaned
+@@ -127,6 +130,7 @@ impl Controller {
+         (
+             Controller {
+                 active_connections: HashMap::new(),
++                locally_initiated: false,
+                 receiver,
+                 recently_closed: HashSet::new(),
+                 client_connection_tx,
+@@ -137,6 +141,18 @@ impl Controller {
+         )
+     }
+ 
++    /// Local SOCKS connections enqueue Insert before sending CONNECT into the mixnet.
++    /// Replies cannot legitimately precede registration. Unlike a requester, this
++    /// controller needs neither pre-connect buffering nor closed-ID tombstones.
++    pub fn new_local_client(
++        client_connection_tx: ConnectionCommandSender,
++        shutdown: ShutdownToken,
++    ) -> (Self, ControllerSender) {
++        let (mut controller, sender) = Self::new(client_connection_tx, shutdown);
++        controller.locally_initiated = true;
++        (controller, sender)
++    }
++
+     fn insert_connection(&mut self, conn_id: ConnectionId, connection_sender: ConnectionSender) {
+         let active_connection = ActiveConnection {
+             is_closed: false,
+@@ -162,7 +178,9 @@ impl Controller {
+         if self.active_connections.remove(&conn_id).is_none() {
+             error!("tried to remove non-existing connection with id: {conn_id}",)
+         }
+-        self.recently_closed.insert(conn_id);
++        if !self.locally_initiated {
++            self.recently_closed.insert(conn_id);
++        }
+ 
+         // Announce closed connections, currently used by the `OutQueueControl`.
+         if let Err(err) = self
+@@ -208,6 +226,9 @@ impl Controller {
+                     error!("failed to send on the active connection channel: {err}");
+                 }
+             }
++        } else if self.locally_initiated {
++            // Includes delayed replies after Remove: discard without retaining
++            // history. Active streams still use the normal ordered buffer.
+         } else if !self.recently_closed.contains(&hdr.connection_id) {
+             debug!("Received a 'Send' before 'Connect' - going to buffer the data");
+             let pending = self.pending_messages.entry(hdr.connection_id).or_default();
+@@ -247,3 +268,100 @@ impl Controller {
+         log::debug!("SOCKS5 Controller: Exiting");
+     }
+ }
++
++#[cfg(test)]
++mod shared_client_tests {
++    use super::*;
++
++    fn local() -> (Controller, mpsc::UnboundedReceiver<ConnectionCommand>) {
++        let (tx, rx) = mpsc::unbounded();
++        (Controller::new_local_client(tx, ShutdownToken::new()).0, rx)
++    }
++
++    fn send(c: &mut Controller, id: u64, seq: u64, closed: bool, bytes: &[u8]) {
++        c.send_to_connection(SocketData::new(seq, id, closed, bytes.to_vec()));
++    }
++
++    #[test]
++    fn reordered_streams_remain_separate_and_close_in_order() {
++        let (mut c, _close) = local();
++        let (a, mut ar) = mpsc::unbounded();
++        let (b, mut br) = mpsc::unbounded();
++        c.insert_connection(1, a);
++        c.insert_connection(2, b);
++        send(&mut c, 1, 2, true, b"A2");
++        send(&mut c, 2, 1, true, b"B1");
++        assert!(ar.try_recv().is_err());
++        assert!(br.try_recv().is_err());
++        send(&mut c, 1, 0, false, b"A0");
++        let first = ar.try_recv().unwrap();
++        assert_eq!(first.payload, b"A0");
++        assert!(!first.socket_closed);
++        send(&mut c, 2, 0, false, b"B0");
++        let second = br.try_recv().unwrap();
++        assert_eq!(second.payload, b"B0B1");
++        assert!(second.socket_closed);
++        send(&mut c, 1, 1, false, b"A1");
++        let last = ar.try_recv().unwrap();
++        assert_eq!(last.payload, b"A1A2");
++        assert!(last.socket_closed);
++    }
++
++    #[test]
++    fn churn_and_unknown_late_replies_retain_no_inactive_state() {
++        let (mut c, mut close) = local();
++        // Local test volume, not public-network traffic or a client-count limit.
++        for id in 0..100_000 {
++            send(&mut c, id, 0, false, b"unsolicited");
++            let (tx, mut rx) = mpsc::unbounded();
++            c.insert_connection(id, tx);
++            assert!(rx.try_recv().is_err());
++            send(&mut c, id, 0, false, b"own");
++            assert_eq!(rx.try_recv().unwrap().payload, b"own");
++            c.remove_connection(id);
++            assert!(matches!(close.try_recv().unwrap(), ConnectionCommand::Close(n) if n == id));
++            send(&mut c, id, 1, false, b"late");
++            send(&mut c, id, 2, true, b"");
++            assert!(c.active_connections.is_empty());
++            assert!(c.pending_messages.is_empty());
++            assert!(c.recently_closed.is_empty());
++        }
++        assert_eq!(c.pending_messages.capacity(), 0);
++        assert_eq!(c.recently_closed.capacity(), 0);
++        assert!(c.active_connections.capacity() <= 3);
++    }
++
++    #[test]
++    fn rejected_close_frames_do_not_poison_stream() {
++        let (mut c, _close) = local();
++        let (tx, mut rx) = mpsc::unbounded();
++        c.insert_connection(7, tx);
++        send(&mut c, 7, 0, false, b"first");
++        assert!(!rx.try_recv().unwrap().socket_closed);
++        send(&mut c, 7, 0, true, b"duplicate");
++        send(&mut c, 7, u64::MAX, true, b"invalid");
++        send(&mut c, 7, 1, false, b"still open");
++        let next = rx.try_recv().unwrap();
++        assert_eq!(next.payload, b"still open");
++        assert!(!next.socket_closed);
++        send(&mut c, 7, 2, true, b"last");
++        assert!(rx.try_recv().unwrap().socket_closed);
++    }
++
++    #[test]
++    fn requester_still_buffers_before_connect_and_discards_after_close() {
++        let (tx, _close) = mpsc::unbounded();
++        let (mut c, _commands) = Controller::new(tx, ShutdownToken::new());
++        send(&mut c, 9, 1, true, b"second");
++        send(&mut c, 9, 0, false, b"first");
++        let (tx, mut rx) = mpsc::unbounded();
++        c.insert_connection(9, tx);
++        let data = rx.try_recv().unwrap();
++        assert_eq!(data.payload, b"firstsecond");
++        assert!(data.socket_closed);
++        c.remove_connection(9);
++        send(&mut c, 9, 2, false, b"late");
++        assert!(c.pending_messages.is_empty());
++        assert!(c.recently_closed.contains(&9));
++    }
++}

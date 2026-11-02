@@ -1,0 +1,10 @@
+Stargate browser extension
+Copyright 2026 The Stargate Authors
+
+storage.js adapts the small asynchronous storage wrapper in Stargate v1
+extension/lib/storage.js. ui.js adapts the refresh-generation guard in
+extension/popup/popup.js. Status/conflict and absent-background regression cases
+are adapted from v1's popup/router tests. These sources are Apache-2.0 licensed;
+see the included LICENSE, or LICENSES/Apache-2.0.txt in the repository.
+The old per-site identity, publicSuffix/native API assumptions, manifest version
+gate, profile baseline installer and spec-kit workflow are not dependencies.
