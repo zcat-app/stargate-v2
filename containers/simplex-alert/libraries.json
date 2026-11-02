@@ -1,0 +1,19 @@
+{
+  "sourceImage": "ubuntu:24.04@sha256:68ee22004a9109b44973313b02ff7b1de250f1de0f5ecb628d73f579aaff33ac",
+  "method": "Only these two library files and their Debian copyright notices are added to the existing patched application runtime subset. No libc from the source image is copied.",
+  "libraries": [
+    {
+      "path": "/usr/lib/x86_64-linux-gnu/libcrypto.so.3",
+      "package": "libssl3t64",
+      "version": "3.0.13-0ubuntu3.16",
+      "sha256": "6866ed711dab8927e1bf82bf1cd30e828bdfc34f3cc1e83b1c9eb01ce6c37d9a"
+    },
+    {
+      "path": "/usr/lib/x86_64-linux-gnu/libgmp.so.10",
+      "sourcePath": "/usr/lib/x86_64-linux-gnu/libgmp.so.10.5.0",
+      "package": "libgmp10",
+      "version": "2:6.3.0+dfsg-2ubuntu6.1",
+      "sha256": "0ccdfb6d6f5c039465f6d002cf7e4c072d48ac6a2cffc8dd6c748dec31592804"
+    }
+  ]
+}

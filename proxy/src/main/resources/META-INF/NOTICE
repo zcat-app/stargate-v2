@@ -1,0 +1,8 @@
+Stargate Java proxy
+Copyright 2026 The Stargate Authors
+
+HmacPartition adapts the JDK HMAC implementation in Stargate v1's
+control-plane/core HmacVerifierMinter.java, licensed under Apache-2.0.
+Wire test scenarios adapt data-plane/internal/forward/tor_test.go and
+tests/integration/fake_socks5_tor.go from the same project and license.
+The v1 workflow and deployment framework are not part of this implementation.

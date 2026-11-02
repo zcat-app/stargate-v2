@@ -1,0 +1,11 @@
+{
+  "version": "v7.0.0",
+  "binaryVersion": "SimpleX Chat v7.0.0.11",
+  "platform": "linux-amd64",
+  "artifact": "v7.0.0/simplex-chat-ubuntu-22_04-x86_64",
+  "url": "https://github.com/simplex-chat/simplex-chat/releases/download/v7.0.0/simplex-chat-ubuntu-22_04-x86_64",
+  "sha256": "393279f37a57ff7a63b92cffbd583d1d8abb5ea13e28f8caea74539d7c8db91d",
+  "signingFingerprint": "BBDF7BDAD1548B16836AF5B9D53BDFD153C366BA",
+  "infochatCommit": "3757850ef7d66d4b2d62cd3cf0a0fa17c1b7e637",
+  "serverDependencyCommit": "efaad8e73436d60f5052f07dda6b71151ad5039b"
+}

@@ -1,0 +1,11 @@
+Stargate manager
+Copyright 2026 The Stargate Authors
+
+TorProbe's READY / NOT_READY / UNAVAILABLE distinction and failure scenarios
+adapt Stargate v1 control-plane/core SidecarMonitor.java and SidecarMonitorTest.java,
+licensed under Apache-2.0. The old event, audit, observer IPC and workflow code
+are not dependencies of this manager.
+Bundled Charts.css 1.2.0, copyright Rami Yushuvaev, MIT license.
+Source: https://github.com/ChartsCSS/charts.css
+License: web/vendor/charts.LICENSE (inside this application jar).
+

@@ -1,0 +1,57 @@
+--- a/libi2pd_client/ClientContext.cpp
++++ b/libi2pd_client/ClientContext.cpp
+@@ -7,6 +7,7 @@
+ */
+ 
+ #include <fstream>
++#include <filesystem>
+ #include <iostream>
+ #include <sstream>
+ #include <boost/property_tree/ptree.hpp>
+@@ -303,10 +304,11 @@
+ 		{
+ 			s.seekg (0, std::ios::end);
+ 			size_t len = s.tellg();
++			if (len < 387 || len > 16384) return false;
+ 			s.seekg (0, std::ios::beg);
+ 			uint8_t * buf = new uint8_t[len];
+ 			s.read ((char *)buf, len);
+-			if(!keys.FromBuffer (buf, len))
++			if(!s || !keys.FromBuffer (buf, len))
+ 			{
+ 				LogPrint (eLogCritical, "Clients: Failed to load keyfile ", filename);
+ 				success = false;
+@@ -317,6 +319,11 @@
+ 		}
+ 		else
+ 		{
++			// Only an absent path may create an identity. Never replace unreadable keys.
++			std::error_code keyError;
++			auto keyStatus = std::filesystem::symlink_status (fullPath, keyError);
++			if ((keyError && keyError != std::errc::no_such_file_or_directory) ||
++				keyStatus.type () != std::filesystem::file_type::not_found) return false;
+ 			LogPrint (eLogInfo, "Clients: Can't open file ", fullPath, " Creating new one with signature type ", sigType, " crypto type ", cryptoType);
+ 			keys = i2p::data::PrivateKeys::CreateRandomKeys (sigType, cryptoType, true);
+ 			std::ofstream f (i2p::fs::CreatePrivateFile (fullPath), std::ofstream::binary | std::ofstream::out);
+@@ -324,6 +331,10 @@
+ 			uint8_t * buf = new uint8_t[len];
+ 			len = keys.ToBuffer (buf, len);
+ 			f.write ((char *)buf, len);
++			f.flush ();
++			success = static_cast<bool>(f);
++			f.close ();
++			success = success && !f.fail ();
+ 			delete[] buf;
+ 
+ 			LogPrint (eLogInfo, "Clients: New private keys file ", fullPath, " for ", m_AddressBook.ToAddress(keys.GetPublic ()->GetIdentHash ()), " created");
+@@ -753,6 +764,10 @@
+ 						}
+ 					}
+ 
++					// An explicitly keyed SOCKS listener must never fall back to the shared identity.
++					if (type == I2P_TUNNELS_SECTION_TYPE_SOCKS && keys != "shareddest" && !localDestination)
++						continue;
++
+ 					if (type == I2P_TUNNELS_SECTION_TYPE_UDPCLIENT)
+ 					{
+ 						// udp client

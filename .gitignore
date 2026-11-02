@@ -1,0 +1,31 @@
+**/target/
+*.local.properties
+*.log
+__pycache__/
+.local-manager/
+.local-setup/
+
+# Private development evidence and generated publication candidates.
+/scratch/
+/publication/
+*.local.bundle
+
+# Operator environment files and credential material.
+.env
+.env.*
+!.env.example
+.git-credentials
+credentials.json
+admin-token
+admin-token.*
+key-passphrase
+id_rsa
+id_ed25519
+*private*.pem
+*private*.key
+server.key
+*.agekey
+*.age
+
+# This project supports Java/Bash tooling; do not add interpreter sources.
+*.py

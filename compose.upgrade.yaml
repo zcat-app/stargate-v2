@@ -1,0 +1,17 @@
+# Opt-in only; use a prepared host updater workDirectory. No Docker socket in app.
+services:
+  app:
+    environment:
+      STARGATE_UPGRADES_ENABLED: "true"
+    volumes:
+      - type: bind
+        source: ${STARGATE_UPGRADE_WORK:?Set the host updater workDirectory}/public
+        target: /run/stargate-upgrade/public
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${STARGATE_UPGRADE_WORK:?Set the host updater workDirectory}/inbox
+        target: /run/stargate-upgrade/inbox
+        bind:
+          create_host_path: false

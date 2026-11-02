@@ -1,0 +1,56 @@
+{
+          "corrId": "c6",
+          "resp": {
+            "type": "newChatItems",
+            "chatItems": [
+              {
+                "chatInfo": {
+                  "type": "direct",
+                  "contact": {
+                    "contactId": 3,
+                    "localDisplayName": "v7probe-user",
+                    "profile": {
+                      "profileId": 3,
+                      "displayName": "v7probe-user",
+                      "fullName": "",
+                      "localAlias": ""
+                    },
+                    "createdAt": "2026-08-15T15:30:47.133956843Z",
+                    "updatedAt": "2026-08-15T15:30:47.133956843Z"
+                  }
+                },
+                "chatItem": {
+                  "chatDir": {
+                    "type": "directSnd"
+                  },
+                  "meta": {
+                    "itemId": 9,
+                    "itemTs": "2026-08-15T15:30:49.019343656Z",
+                    "itemText": "v7 probe reply canary",
+                    "itemStatus": {
+                      "type": "sndNew"
+                    },
+                    "itemSharedMsgId": "WmJvek5VcXFsNXdPMXZrZA==",
+                    "itemEdited": false,
+                    "userMention": false,
+                    "hasLink": false,
+                    "deletable": true,
+                    "editable": true,
+                    "showGroupAsSender": false,
+                    "createdAt": "2026-08-15T15:30:49.019343656Z",
+                    "updatedAt": "2026-08-15T15:30:49.019343656Z"
+                  },
+                  "content": {
+                    "type": "sndMsgContent",
+                    "msgContent": {
+                      "type": "text",
+                      "text": "v7 probe reply canary"
+                    }
+                  },
+                  "mentions": {},
+                  "reactions": []
+                }
+              }
+            ]
+          }
+        }

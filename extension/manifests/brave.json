@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "Stargate",
+  "version": "0.8.9",
+  "description": "Connect this browser to Stargate. Automatic Tor, I2P and Nym routes, with three local themes.",
+  "permissions": [
+    "proxy",
+    "privacy",
+    "storage",
+    "webRequest",
+    "webRequestAuthProvider"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "action": {
+    "default_title": "Stargate: checking browser settings",
+    "default_popup": "ui.html?view=popup",
+    "default_icon": {
+      "16": "icons/stargate-unknown-16.png",
+      "32": "icons/stargate-unknown-32.png"
+    }
+  },
+  "icons": {
+    "16": "icons/stargate-setup-16.png",
+    "32": "icons/stargate-setup-32.png"
+  },
+  "options_ui": {
+    "page": "ui.html",
+    "open_in_tab": true
+  },
+  "background": {
+    "service_worker": "worker.js"
+  }
+}

@@ -1,0 +1,14 @@
+[
+  {
+    "package": "tor",
+    "version": "0.4.9.15-1~noble+1",
+    "url": "https://deb.torproject.org/torproject.org/pool/main/t/tor/tor_0.4.9.15-1~noble+1_amd64.deb",
+    "sha256": "a87c8da34869599f03e3706661ca6770bf4fbc395ec994b10da68d9c73e8c2c1"
+  },
+  {
+    "package": "tor-geoipdb",
+    "version": "0.4.9.15-1~noble+1",
+    "url": "https://deb.torproject.org/torproject.org/pool/main/t/tor/tor-geoipdb_0.4.9.15-1~noble+1_all.deb",
+    "sha256": "2b8127116dda91b931584d4fd8882861c33a31a5c2afa7c529a3dff2360ec189"
+  }
+]

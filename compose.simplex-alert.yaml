@@ -1,0 +1,37 @@
+# Standalone opt-in deployment. Use its own explicit Compose project; never merge
+# with compose.yaml. No service observes or controls Stargate.
+services:
+  simplex-alert:
+    image: stargate-v2-simplex-alert:local
+    pull_policy: never
+    build:
+      context: ./target/simplex-alert-container
+      dockerfile: ../../containers/simplex-alert/Dockerfile
+    environment:
+      SIMPLEX_ALERT_ENDPOINT: ws://127.0.0.1:17619/
+      SIMPLEX_ALERT_CONTACT_ID: ${SIMPLEX_ALERT_CONTACT_ID:?Set the established numeric alert contact}
+    volumes:
+      - type: bind
+        source: ${SIMPLEX_ALERT_PROFILE:?Set an absolute dedicated stopped SimpleX profile directory}
+        target: /profile
+        bind:
+          create_host_path: false
+    networks: [alert-egress]
+    read_only: true
+    user: '10001:10001'
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 128
+    mem_limit: 768m
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m,mode=1777
+    ulimits:
+      core: 0
+    logging:
+      driver: none
+    stop_grace_period: 15s
+    # Keep the dedicated runtime available to the daily monitor after host boot.
+    # This does not start the monitor or replay its pending delivery records.
+    restart: unless-stopped
+networks:
+  alert-egress: {}

@@ -1,0 +1,30 @@
+# Explicit opt-in: docker compose -f compose.yaml -f compose.nym.yaml up -d
+services:
+  app:
+    environment:
+      STARGATE_NYM_ENABLED: "true"
+  nym:
+    image: stargate-v2-nym:local
+    pull_policy: never
+    build:
+      context: ./target/container
+      dockerfile: ../../containers/Dockerfile
+      target: nym
+    environment:
+      STARGATE_NYM_PROVIDER: ${STARGATE_NYM_PROVIDER:?Select a current public Nym network requester}
+    volumes:
+      - nym-data:/data/nym
+      - nym-secrets:/secrets
+    tmpfs:
+      - /tmp:mode=1777
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 256
+    mem_limit: 768m
+    stop_grace_period: 30s
+    restart: unless-stopped
+    networks: [backend, egress]
+volumes:
+  nym-data: {}
+  nym-secrets: {}

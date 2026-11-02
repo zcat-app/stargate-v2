@@ -1,0 +1,18 @@
+{
+  "sourceCommit": "28904698fd68337cc722d51ab21f29f4fd6c56ce",
+  "patchSha256": "8ae06ab86b5ce2ecfda5c0d489c5e801e971886949a0d2abc34ba2cf53a55fef",
+  "cargoLockSha256": "27e85b5dc4cac218a3284ab422e99cfc0ca7bf9d6bf2b104455e3d49bdb26dbe",
+  "builderBase": "rust:1.97.0-bookworm@sha256:8fa55b2f3ddf97471ab6a767bfa3f37e6bad0986ba823e75fea57e2a2a5c3073",
+  "updates": {
+    "webpki-roots": "1.0.10",
+    "rustls-webpki": "0.103.16",
+    "rustls": "0.23.46",
+    "h2": "0.4.16",
+    "ctutils": "0.4.5",
+    "crypto-bigint": "0.7.6",
+    "tokio": "1.53.3",
+    "aws-lc-rs": "1.18.2",
+    "aws-lc-sys": "0.46.0"
+  },
+  "verifierTestCommit": "8ecdcc76f56b68fda67a6adf7976f5eed5006a4c"
+}

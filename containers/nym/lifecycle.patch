@@ -1,0 +1,16 @@
+--- a/common/socks5-client-core/src/lib.rs
++++ b/common/socks5-client-core/src/lib.rs
+@@ -156,7 +156,12 @@
+     }
+ 
+     /// blocking version of `start` method. Will run forever (or until SIGINT is sent)
+-    pub async fn run_forever(self) -> Result<(), Box<dyn Error + Send + Sync>> {
++    pub async fn run_forever(mut self) -> Result<(), Box<dyn Error + Send + Sync>> {
++        // Container supervisors send SIGTERM; use the existing cancellation/flush path.
++        #[cfg(unix)]
++        {
++            self.shutdown_manager = self.shutdown_manager.with_terminate_signal()?;
++        }
+         let mut started = self.start().await?;
+ 
+         started.shutdown_handle.run_until_shutdown().await;

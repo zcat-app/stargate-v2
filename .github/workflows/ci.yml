@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check source policy and shell syntax
+        run: |
+          bash tools/check-source-policy.sh
+          while IFS= read -r -d '' path; do
+            case "$path" in *.sh) bash -n "$path" ;; esac
+          done < <(git ls-files -z)
+
+      - name: Read declared Java version
+        id: java
+        run: |
+          version=$(jq -er '.version | select(test("^25\\.[0-9]+\\.[0-9]+$"))' containers/java-runtime.json)
+          printf 'version=%s\n' "$version" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Java
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: ${{ steps.java.outputs.version }}
+          verify-signature: true
+          cache-jdk: false
+          overwrite-settings: false
+
+      - name: Set up Node for extension tests
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+          package-manager-cache: false
+
+      - name: Show tool versions
+        run: |
+          java --version
+          javac --version
+          mvn --version
+          node --version
+
+      - name: Test and package Java reactor
+        run: bash tools/with-toolchain.sh mvn --batch-mode --no-transfer-progress package
+
+      - name: Test and package standalone alerts
+        run: bash tools/with-toolchain.sh mvn --batch-mode --no-transfer-progress -f simplex-alert/pom.xml package
+
+      - name: Test extension behavior
+        run: node --test extension/test/*.test.cjs
+
+      - name: Test and build unsigned extension packages
+        run: |
+          bash extension/test-package.sh
+          bash extension/package.sh
