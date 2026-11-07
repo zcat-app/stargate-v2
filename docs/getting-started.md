@@ -23,12 +23,16 @@ between them. You never need the operator's administrator token.
 
 ## Firefox
 
-The public v0.1.0-rc.3 release provides extension version **0.8.8** as
-`stargate-firefox.xpi`, a ZIP-format add-on. A Mozilla-signed permanent-install
-package is not available yet.
+Install from
+[Mozilla Add-ons](https://addons.mozilla.org/en-US/firefox/addon/stargate-browser-proxy/)
+for a normal, signed installation that stays across restarts and updates
+itself. Then set the private-windows permission described below and continue
+with [Connect](#connect-to-your-server).
 
-The GitHub RC's XPI is unsigned by Mozilla, so its normal installer may say it
-is not verified. Use temporary loading below; do not disable signature checks.
+The public v0.1.0-rc.3 GitHub release also provides extension version **0.8.8**
+as `stargate-firefox.xpi`, a ZIP-format add-on for temporary loading. The GitHub
+RC's XPI is unsigned by Mozilla, so its normal installer may say it is not
+verified. Use temporary loading below; do not disable signature checks.
 
 1. Save the package somewhere you can find again. If clicking the link opens the
    normal installer, use **Save Link As…** instead. Do not extract the package.
@@ -96,8 +100,9 @@ extension's warning does not block that traffic.
 3. Review **3. Browser settings applied** and check the server address. If access
    was saved but settings failed, finish the reported browser step and choose
    **Apply browser settings**. You do not need another code for that.
-4. Fully quit and reopen the browser before sensitive browsing. In Firefox, load
-   the same temporary package again. Check that Stargate uses its saved access
+4. Fully quit and reopen the browser before sensitive browsing. In Firefox, if
+   the extension was loaded temporarily, load the same package again. Check
+   that Stargate uses its saved access
    and its settings are on. Existing connections can otherwise keep their old route.
 5. Open a page from the normal address bar. Applied settings alone do not prove
    that a website or network is reachable.

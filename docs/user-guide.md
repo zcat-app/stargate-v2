@@ -43,10 +43,17 @@ device each need their own access code. Do not copy saved access between them.
 
 ### Install in Firefox
 
-These steps install the public GitHub v0.1.0-rc.3 **Firefox 0.8.8** package,
-which is unsigned by Mozilla. A permanent-install package is not available yet.
-Normal installation of the RC can report that the add-on is not verified.
-Use temporary loading below; do not disable signature checks.
+Install from
+[Mozilla Add-ons](https://addons.mozilla.org/en-US/firefox/addon/stargate-browser-proxy/)
+for a normal, signed installation that stays across restarts and updates
+itself; then set the private-windows permission in step 4 and continue
+connecting below.
+
+These steps cover the public GitHub v0.1.0-rc.3 **Firefox 0.8.8** package,
+which is unsigned by Mozilla: normal installation of the RC can report that
+the add-on is not verified, and a temporary add-on must be loaded again after
+every Firefox restart. Use temporary loading below; do not disable signature
+checks.
 
 1. Save the Firefox XPI somewhere you can find again. If the download opens the
    normal installer, use **Save Link As…**. You do not need to extract the XPI.
@@ -194,20 +201,24 @@ access codes, saved credentials or administrator secrets in screenshots/logs.
 
 ### Update or return after a restart
 
-Obtain updates from your operator or the project's GitHub releases and
+Firefox installations from
+[Mozilla Add-ons](https://addons.mozilla.org/en-US/firefox/addon/stargate-browser-proxy/)
+update automatically. For the GitHub packages, obtain updates from your
+operator or the project's GitHub releases and
 [verify the downloads](release-readiness.md#verify-the-downloads). The public
 v0.1.0-rc.3 packages are 0.8.8. Do not uninstall or clear extension data as a
 routine update step.
 
-- **Firefox:** replace the saved XPI at the same location, fully quit and reopen
-  Firefox, then use **Load Temporary Add-on…** to load that XPI. Check saved access
-  and the version in Stargate.
+- **Firefox (temporary loading):** replace the saved XPI at the same location,
+  fully quit and reopen Firefox, then use **Load Temporary Add-on…** to load
+  that XPI. Check saved access and the version in Stargate.
 - **Brave:** replace files in the same extracted folder, then use **Reload** on
   Stargate's `brave://extensions` card. Check the version and settings.
 
 Fully restart after applying settings before sensitive browsing. A new profile,
-removed data or revoked access can require a new code. The steps above apply to
-the unsigned GitHub Firefox XPI and unpacked Brave ZIP. Brave updates are manual.
+removed data or revoked access can require a new code. The temporary-loading
+steps apply to the unsigned GitHub Firefox XPI; the Add-ons install updates
+itself. Brave updates are manual.
 
 ## What privacy this provides
 

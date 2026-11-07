@@ -24,10 +24,16 @@ make private browsing supported. Brave private windows can connect outside Starg
 
 ## Downloads
 
-[Open the v0.1.0-rc.3 downloads](https://github.com/zcat-app/stargate-v2/releases/tag/v0.1.0-rc.3)
-— a testing prerelease for Linux amd64. Both extension packages are version **0.8.8**.
+[<img src="docs/media/readme/get-firefox-badge.svg" alt="Get Stargate on Mozilla Add-ons" width="264">](https://addons.mozilla.org/en-US/firefox/addon/stargate-browser-proxy/)
 
-- **Firefox:** `stargate-firefox.xpi` — load it temporarily using the
+[Open the v0.1.0-rc.3 downloads](https://github.com/zcat-app/stargate-v2/releases/tag/v0.1.0-rc.3)
+— a testing prerelease for Linux amd64. The GitHub extension packages are
+version **0.8.8**; Firefox **0.8.9** is available from Mozilla Add-ons.
+
+- **Firefox:** install from
+  [Mozilla Add-ons](https://addons.mozilla.org/en-US/firefox/addon/stargate-browser-proxy/)
+  (signed **0.8.9**, permanent install, automatic updates), or load the RC's
+  unsigned `stargate-firefox.xpi` (**0.8.8**) temporarily using the
   [Firefox instructions](docs/getting-started.md#firefox).
 - **Brave:** `stargate-brave.zip` — extract it and follow the
   [Brave instructions](docs/getting-started.md#brave).
@@ -38,9 +44,12 @@ make private browsing supported. Brave private windows can connect outside Starg
 Before installing or using any release files, [verify the signed downloads](docs/release-readiness.md#verify-the-downloads).
 This includes the Firefox and Brave extension packages.
 
-A Mozilla-signed permanent-install package is not available yet. Use the
-Firefox temporary-loading instructions above. Brave is distributed on GitHub
-with manual installation and updates. See [downloads and verification](docs/release-readiness.md).
+Firefox is published on
+[Mozilla Add-ons](https://addons.mozilla.org/en-US/firefox/addon/stargate-browser-proxy/):
+a Mozilla-signed permanent-install package with automatic updates. The GitHub
+RC's XPI remains an unsigned temporary-load fallback. Brave is distributed on
+GitHub with manual installation and updates. See
+[downloads and verification](docs/release-readiness.md).
 
 Linux amd64 is the qualified deployment/browser platform; other systems are not
 qualified by these records.

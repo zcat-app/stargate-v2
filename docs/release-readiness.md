@@ -19,9 +19,12 @@ follow [updater setup](verified-upgrades.md#configure-the-operators-updater).
 
 ## Extension distribution
 
-A Mozilla-signed permanent-install package is not available yet. Normal Firefox
-requires Mozilla signing for permanent installation; do not disable signature
-verification. Brave remains GitHub-only with manual updates.
+Firefox is published on Mozilla Add-ons as
+[Stargate](https://addons.mozilla.org/en-US/firefox/addon/stargate-browser-proxy/):
+version **0.8.9**, Mozilla-signed for permanent installation, with automatic
+updates (listed 1 November 2026, approved 4 November 2026). Do not disable
+signature verification. The GitHub RC keeps the unsigned `stargate-firefox.xpi`
+0.8.8 for temporary loading. Brave remains GitHub-only with manual updates.
 
 The source manifests declare 0.8.9; the retained prebuilt packages are 0.8.8.
 Building this checkout does not reproduce those historical packages. See

@@ -4,6 +4,11 @@ The banner uses Stargate portal and Observatory planet artwork from the extensio
 with outlined DejaVu Sans lettering. No external font, script or animation is
 loaded. The lit portal is branding, not a connection-status indicator.
 
+The Mozilla Add-ons badge is original project artwork: outlined DejaVu Sans
+lettering beside an abstract swirl in Firefox gradient colors. "Firefox" and
+"Mozilla Add-ons" are Mozilla trademarks; the badge only links to the store
+listing and implies no endorsement.
+
 The six screenshots show the actual 0.8.8 extension in Brave 1.98.60 before
 pairing, using empty fields and example placeholders. They illustrate the popup,
 three themes, settings, onboarding and built-in quick-start. They do not prove
