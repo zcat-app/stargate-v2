@@ -112,6 +112,13 @@ chose that option. Expiry does not end access already saved in your browser.
 An expired or used code needs a fresh replacement; do not repeatedly retry it.
 If pairing's result is unknown, ask the operator to check before trying again.
 
+<p align="center">
+  <a href="media/extension/setup-form.png"><img src="media/extension/setup-form.png" width="640" alt="Connect this browser form with empty address and access-code fields"></a>
+</p>
+
+*The form before pairing. Use the server address from your operator, not the
+example placeholder.*
+
 ## What next?
 
 - [Make Stargate look the way you like](customization.md).

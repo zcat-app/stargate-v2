@@ -61,7 +61,9 @@ other Linux hosts need [manual prerequisite setup](docs/setup-prerequisites.md).
 Once the extension is installed, open Stargate and choose **I have an access code**.
 Follow the setup steps, then browse from your usual address bar.
 
-[<img src="docs/media/readme/stargate-popup.png" width="320" alt="The initial Stargate popup, ready to start setup with an access code">](docs/media/readme/stargate-popup.png)
+<p align="center">
+  <a href="docs/media/readme/stargate-popup.png"><img src="docs/media/readme/stargate-popup.png" width="300" alt="Stargate 0.8.9 before setup, with I have an access code"></a>
+</p>
 
 [Get started with Firefox or Brave →](docs/getting-started.md)
 
@@ -70,14 +72,24 @@ Follow the setup steps, then browse from your usual address bar.
 Pick **Clear**, **Stargate** or **Observatory** in **Settings → Appearance**.
 Themes change the look; your saved access and routes stay the same.
 
-| Clear | Stargate | Observatory |
-| --- | --- | --- |
-| [<img src="docs/media/readme/clear-popup.png" width="240" alt="Clear: a light theme with blue accents">](docs/media/readme/clear-popup.png) | [<img src="docs/media/readme/stargate-popup.png" width="240" alt="Stargate: a dark blue theme with portal artwork">](docs/media/readme/stargate-popup.png) | [<img src="docs/media/readme/observatory-popup.png" width="240" alt="Observatory: a purple theme with a ringed planet">](docs/media/readme/observatory-popup.png) |
+The examples below show the connected-state controls with a **fictional server**.
+They are labeled demonstrations, not live connections or network tests.
+
+<table align="center">
+  <thead><tr><th>Clear</th><th>Stargate</th><th>Observatory</th></tr></thead>
+  <tbody><tr>
+    <td align="center" valign="top"><a href="docs/media/extension/connected-clear.png"><img src="docs/media/extension/connected-clear.png" width="200" alt="Clear theme: illustrative connected state with example server gate.example.org:9443; no live connection"></a></td>
+    <td align="center" valign="top"><a href="docs/media/extension/connected-stargate.png"><img src="docs/media/extension/connected-stargate.png" width="200" alt="Stargate theme: illustrative connected state with example server gate.example.org:9443; no live connection"></a></td>
+    <td align="center" valign="top"><a href="docs/media/extension/connected-observatory.png"><img src="docs/media/extension/connected-observatory.png" width="200" alt="Observatory theme: illustrative connected state with example server gate.example.org:9443; no live connection"></a></td>
+  </tr></tbody>
+</table>
 
 Open **Settings** for appearance, motion and optional features. Advanced mode
 can stay off until you need it.
 
-[<img src="docs/media/readme/stargate-settings.png" width="560" alt="Stargate Settings, with theme choices, motion preferences and optional IPFS setup">](docs/media/readme/stargate-settings.png)
+<p align="center">
+  <a href="docs/media/extension/appearance-controls.png"><img src="docs/media/extension/appearance-controls.png" width="640" alt="Appearance controls with Clear selected and the Motion preference"></a>
+</p>
 
 [Customize Stargate →](docs/customization.md)
 
@@ -86,11 +98,14 @@ can stay off until you need it.
 The setup page walks you through preparing your browser and connecting.
 A Firefox/Brave quick-start is built in, so the steps are there when you need them.
 
-[<img src="docs/media/readme/quick-start-guide.png" width="640" alt="The built-in Firefox and Brave quick-start, showing browser preparation and installation steps">](docs/media/readme/quick-start-guide.png)
+<p align="center">
+  <a href="docs/media/extension/setup-form.png"><img src="docs/media/extension/setup-form.png" width="640" alt="Connect this browser form with empty server-address and one-time access-code fields"></a>
+</p>
 
 [Follow the setup and find help →](docs/onboarding.md)
 
-*Screens shown before connecting to a server.*
+*Setup and settings captures show an unpaired browser. Connected-state examples
+use synthetic state and a reserved example address.*
 
 ## Where your traffic goes
 

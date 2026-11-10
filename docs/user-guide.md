@@ -94,8 +94,9 @@ verified as protection. The private-window warning does not block that traffic.
 3. Review **3. Browser settings applied**. Check the server address and preparation
    note. If access was saved but settings failed, complete the indicated browser
    step and use **Apply browser settings**. You do not need another code for this.
-4. Fully quit and reopen the browser before sensitive browsing. In Firefox, load
-   the same temporary XPI again. Open Stargate and check that its settings are on.
+4. Fully quit and reopen the browser before sensitive browsing. In Firefox,
+   reload the same XPI only if you installed it temporarily. Open Stargate and
+   check that its settings are on.
 5. Open a website from the normal address bar. Applied settings do not prove that
    a website or every network is currently reachable.
 
@@ -103,6 +104,12 @@ Codes are single-use and expire after **five minutes by default**, or **24 hours
 if the operator selected that option. Once saved, browser access does not end when
 the code expires. It remains usable unless revoked or its configuration changes.
 You do not need a new code for every visit or ordinary restart.
+
+<p align="center">
+  <a href="media/extension/setup-form.png"><img src="media/extension/setup-form.png" width="640" alt="Empty server-address and one-time access-code fields in Connect this browser"></a>
+</p>
+
+*Setup before pairing; the address shown is a placeholder.*
 
 ## 3. Everyday controls
 
@@ -117,6 +124,13 @@ a full tab. The installed version appears in the header of both views.
 | **Settings are on** with server status unavailable | Keep settings on; inspect **Connection details** or contact the operator. Status failure alone does not prove forwarding stopped. |
 | **Settings need attention** / **Settings are not confirmed** | Read the message before browsing. Another extension or browser policy may control a required setting. |
 | **One network needs attention** | Check that route's observation; other networks may still work. |
+
+<p align="center">
+  <a href="media/extension/connected-stargate.png"><img src="media/extension/connected-stargate.png" width="300" alt="Illustrative Stargate is on popup with example server gate.example.org:9443; no live connection"></a>
+</p>
+
+*Illustrative connected state with a fictional server; this is not a live
+connection or a network test.*
 
 The toolbar icon, badge and tooltip reflect these settings states. They are not
 proof that a destination is reachable. A listening port or a past successful
@@ -140,6 +154,10 @@ to keep browsing through Stargate.
 **Settings → Appearance** offers **Clear**, **Stargate** and **Observatory**.
 They change appearance only, using local assets. **Motion → Reduce motion** works
 with every theme. The toolbar indicators are static.
+
+<p align="center">
+  <a href="media/extension/appearance-controls.png"><img src="media/extension/appearance-controls.png" width="640" alt="Clear, Stargate and Observatory theme buttons and the Motion preference"></a>
+</p>
 
 Leave **Advanced mode** off unless you need one of these controls:
 
@@ -168,6 +186,13 @@ Keep the tab open until approval. If needed, inspect `brave://settings/handlers`
 Approve the handler before typing an `ipfs://` address; otherwise the browser may
 send it to a search provider. After setup, use the normal address bar. The
 **IPFS tool** also accepts a CID or IPFS address and opens content in a new tab.
+
+<p align="center">
+  <a href="media/extension/ipfs-tool.png"><img src="media/extension/ipfs-tool.png" width="640" alt="IPFS tool with an empty CID or ipfs address field and Open content through Nym button"></a>
+</p>
+
+*The tool before entering an address. Saved access and applied settings are
+required before opening content.*
 
 Content comes from the selected HTTPS gateway through Nym. Stargate does not run
 a local IPFS node, publish content, support IPNS or independently verify content
