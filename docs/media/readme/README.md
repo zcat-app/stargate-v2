@@ -16,7 +16,7 @@ show 0.8.8 in Brave 1.98.60 before pairing. They illustrate controls, not networ
 access or a completed accessibility audit.
 
 The README also uses [shared extension illustrations](../extension/README.md),
-including visibly labeled connected-state demos with a reserved example address.
+including captioned connected-state illustrations with a reserved example address.
 
 Project artwork and UI screenshots use Apache-2.0. Font-derived outlines retain
 the [DejaVu/Bitstream notice](DejaVu-LICENSE.txt); no font file is bundled.

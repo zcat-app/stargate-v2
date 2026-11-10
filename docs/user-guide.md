@@ -126,11 +126,10 @@ a full tab. The installed version appears in the header of both views.
 | **One network needs attention** | Check that route's observation; other networks may still work. |
 
 <p align="center">
-  <a href="media/extension/connected-stargate.png"><img src="media/extension/connected-stargate.png" width="300" alt="Illustrative Stargate is on popup with example server gate.example.org:9443; no live connection"></a>
+  <a href="media/extension/connected-stargate.png"><img src="media/extension/connected-stargate.png" width="300" alt="Illustrative Stargate is on popup with an example server"></a>
 </p>
 
-*Illustrative connected state with a fictional server; this is not a live
-connection or a network test.*
+*Illustrative connected state using an example address and synthetic data.*
 
 The toolbar icon, badge and tooltip reflect these settings states. They are not
 proof that a destination is reachable. A listening port or a past successful

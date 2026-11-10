@@ -72,17 +72,16 @@ Follow the setup steps, then browse from your usual address bar.
 Pick **Clear**, **Stargate** or **Observatory** in **Settings → Appearance**.
 Themes change the look; your saved access and routes stay the same.
 
-The examples below show the connected-state controls with a **fictional server**.
-They are labeled demonstrations, not live connections or network tests.
-
 <table align="center">
   <thead><tr><th>Clear</th><th>Stargate</th><th>Observatory</th></tr></thead>
   <tbody><tr>
-    <td align="center" valign="top"><a href="docs/media/extension/connected-clear.png"><img src="docs/media/extension/connected-clear.png" width="200" alt="Clear theme: illustrative connected state with example server gate.example.org:9443; no live connection"></a></td>
-    <td align="center" valign="top"><a href="docs/media/extension/connected-stargate.png"><img src="docs/media/extension/connected-stargate.png" width="200" alt="Stargate theme: illustrative connected state with example server gate.example.org:9443; no live connection"></a></td>
-    <td align="center" valign="top"><a href="docs/media/extension/connected-observatory.png"><img src="docs/media/extension/connected-observatory.png" width="200" alt="Observatory theme: illustrative connected state with example server gate.example.org:9443; no live connection"></a></td>
+    <td align="center" valign="top"><a href="docs/media/extension/connected-clear.png"><img src="docs/media/extension/connected-clear.png" width="200" alt="Clear theme showing an illustrative connected state with an example server"></a></td>
+    <td align="center" valign="top"><a href="docs/media/extension/connected-stargate.png"><img src="docs/media/extension/connected-stargate.png" width="200" alt="Stargate theme showing an illustrative connected state with an example server"></a></td>
+    <td align="center" valign="top"><a href="docs/media/extension/connected-observatory.png"><img src="docs/media/extension/connected-observatory.png" width="200" alt="Observatory theme showing an illustrative connected state with an example server"></a></td>
   </tr></tbody>
 </table>
+
+*Illustrative connected state using an example address and synthetic data.*
 
 Open **Settings** for appearance, motion and optional features. Advanced mode
 can stay off until you need it.
@@ -104,8 +103,7 @@ A Firefox/Brave quick-start is built in, so the steps are there when you need th
 
 [Follow the setup and find help →](docs/onboarding.md)
 
-*Setup and settings captures show an unpaired browser. Connected-state examples
-use synthetic state and a reserved example address.*
+*Setup and settings show an unpaired browser.*
 
 ## Where your traffic goes
 
