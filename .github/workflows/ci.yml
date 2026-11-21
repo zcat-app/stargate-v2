@@ -34,8 +34,10 @@ jobs:
       - name: Read declared Java version
         id: java
         run: |
-          version=$(jq -er '.version | select(test("^25\\.[0-9]+\\.[0-9]+$"))' containers/java-runtime.json)
-          printf 'version=%s\n' "$version" >> "$GITHUB_OUTPUT"
+          version=$(jq -er '.version | select(test("^25(\\.[0-9]+){2,3}$"))' containers/java-runtime.json)
+          source containers/setup/prerequisites.sh
+          [[ "$JAVA_SETUP_VERSION" == "$version" && "$JAVA_SETUP_BUILD" == "$version"+* ]]
+          printf 'version=%s\n' "$JAVA_SETUP_BUILD" >> "$GITHUB_OUTPUT"
 
       - name: Set up Java
         uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0

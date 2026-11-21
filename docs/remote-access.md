@@ -42,7 +42,7 @@ helper converts the key to unencrypted PKCS8 and restricts it to the app's UID
 for a Caddy certificate (never print or share key contents):
 
 ```sh
-sudo /opt/stargate/jdk-25.0.5+8/bin/java --source 25 /usr/local/libexec/SyncTlsCertificate.java \
+sudo /opt/stargate/jdk-25.0.5.1+2/bin/java --source 25 /usr/local/libexec/SyncTlsCertificate.java \
   --certificate /var/lib/caddy/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory/gate.example.org/gate.example.org.crt \
   --key /var/lib/caddy/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory/gate.example.org/gate.example.org.key \
   --output /srv/stargate/tls

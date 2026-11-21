@@ -48,9 +48,11 @@ class PreparationTest {
     void file(String path,String content)throws Exception {Path p=temp.resolve(path);Files.createDirectories(p.getParent());Files.writeString(p,content);}
     void record(String path,com.fasterxml.jackson.databind.JsonNode n)throws Exception{file(path,n.toString());}
     PrepareImageInputs.Options nativeFixture()throws Exception {
-        file("containers/native/patches/fix.patch","libc patch");file("target/native/libc6_fixed_amd64.deb","synthetic libc package");
-        var libc=obj().put("local_version","fixed");libc.putArray("patches").addObject().put("file","patches/fix.patch").put("sha256",hash(temp.resolve("containers/native/patches/fix.patch")));record("containers/native/glibc-inputs.json",libc);
-        var nativeRecord=obj().put("local_version","fixed");nativeRecord.putObject("debs").put("libc6_fixed_amd64.deb",hash(temp.resolve("target/native/libc6_fixed_amd64.deb")));record("target/native/build-hashes.json",nativeRecord);
+        String libcPackage = "libc6_fixed_amd64.deb";
+        file("target/native/" + libcPackage, "synthetic libc package");
+        record("containers/native/libc-runtime.json", obj().put("package", "libc6").put("version", "fixed")
+                .put("url", "https://security.ubuntu.com/ubuntu/pool/main/g/glibc/" + libcPackage)
+                .put("sha256", hash(temp.resolve("target/native/" + libcPackage))));
         var i2p=obj().put("sourceCommit","a".repeat(40));
         for(var e:Map.of("identity-fail-closed.patch","patchSha256","lifecycle-ack.patch","lifecyclePatchSha256","owner.c","ownerSourceSha256","Dockerfile.builder","builderDockerfileSha256").entrySet()){String path="containers/i2p/"+e.getKey();file(path,e.getKey());i2p.put(e.getValue(),hash(temp.resolve(path)));}
         for(var e:Map.of("i2pd-"+"a".repeat(40)+"/i2pd","binarySha256","stargate-i2p-owner","ownerBinarySha256").entrySet()){String path="target/i2p-isolation-build/"+e.getKey();file(path,e.getKey());i2p.put(e.getValue(),hash(temp.resolve(path)));}
@@ -65,14 +67,24 @@ class PreparationTest {
         record("nym/build-record.json",nym);record("containers/nym-release.json",obj().put("commit","b".repeat(40)));
         return new PrepareImageInputs.Options(temp,temp.resolve("target/context"),temp.resolve("evidence"),temp.resolve("nym"),true);
     }
-    @Test void nativeChecksRetainAllPatchAndRegressionGates()throws Exception {
+    @Test void nativeChecksRetainSourceIntegrityAndRegressionGates()throws Exception {
         var o=nativeFixture();assertNotNull(PrepareImageInputs.verify(o));
-        for(String path:List.of("containers/native/patches/fix.patch","target/native/libc6_fixed_amd64.deb","containers/i2p/lifecycle-ack.patch","target/i2p-isolation-build/stargate-i2p-owner","containers/nym/lifecycle.patch","containers/nym/shared-client.patch","nym/source/target/release/nym-socks5-client")) {
+        for(String path:List.of("containers/native/libc-runtime.json","target/native/libc6_fixed_amd64.deb","containers/i2p/lifecycle-ack.patch","target/i2p-isolation-build/stargate-i2p-owner","containers/nym/lifecycle.patch","containers/nym/shared-client.patch","nym/source/target/release/nym-socks5-client")) {
             byte[] saved=Files.readAllBytes(temp.resolve(path));Files.writeString(temp.resolve(path),"tampered");assertThrows(Exception.class,()->PrepareImageInputs.verify(o),path);Files.write(temp.resolve(path),saved);
         }
         Path rec=temp.resolve("nym/build-record.json");var original=(ObjectNode)json(rec);
         for(String flag:List.of("verifierRegressionPassed","sharedClientRegressionPassed")){var changed=original.deepCopy().put(flag,false);Files.writeString(rec,changed.toString());assertThrows(Exception.class,()->PrepareImageInputs.verify(o));Files.writeString(rec,original.toString());}
         var changed=original.deepCopy();changed.remove("sharedClientPatchSha256");Files.writeString(rec,changed.toString());assertThrows(Exception.class,()->PrepareImageInputs.verify(o));
+    }
+    @Test void applicationPayloadRemainsReadableWithPrivateBuildPermissions() throws Exception {
+        file("private/app.jar", "synthetic application");
+        Path jar = temp.resolve("private/app.jar");
+        mode(jar, 0600);
+        Path installed = temp.resolve("stage/manager");
+        tree(jar.getParent(), installed);
+        assertEquals(hash(jar), hash(installed.resolve("app.jar")));
+        assertEquals(0644, (int) Files.getAttribute(installed.resolve("app.jar"), "unix:mode") & 0777);
+        assertEquals(0600, (int) Files.getAttribute(jar, "unix:mode") & 0777);
     }
     @Test void failureBeforeHeavyWorkPreservesPreviousContext()throws Exception {
         var o=nativeFixture();file("containers/java-runtime.json","{\"version\":\"25.0.5\"}");previousContext();file("target/context/keep","previous usable context");file("containers/i2p/owner.c","tampered");
@@ -104,6 +116,7 @@ class PreparationTest {
     }
     @Test void imagePreparerUsesTheSameStrictJavaPinSchemaAsMonitor()throws Exception {
         file("containers/java-runtime.json","{\"version\":\"25.0.5\"}");assertEquals("25.0.5",PrepareImageInputs.javaBaseline(temp));
+        file("containers/java-runtime.json","{\"version\":\"25.0.5.1\"}");assertEquals("25.0.5.1",PrepareImageInputs.javaBaseline(temp));
         for(String raw:List.of("{\"version\":\"25.0.5\",\"extra\":true}","{\"version\":\"25.0.5\",\"version\":\"25.0.6\"}","{}","{\"version\":\"other\"}")){file("containers/java-runtime.json",raw);assertThrows(Exception.class,()->PrepareImageInputs.javaBaseline(temp));}
     }
     @Test void existingI2pManifestWithoutPackageNameIsVerified()throws Exception {

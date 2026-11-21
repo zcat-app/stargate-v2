@@ -202,7 +202,7 @@ expected candidate hash must come from the reviewed build/release record.
 ```bash
 monitor_config=/absolute/private/config.json
 monitor_old_jar=/absolute/installed/monitor.jar
-monitor_java_home=/absolute/qualified/jdk-25.0.5+8
+monitor_java_home=/absolute/qualified/jdk-25.0.5.1+2
 monitor_upgrade=/absolute/private/monitor-upgrade-REVIEWED_REVISION
 monitor_expected_sha256=REPLACE_WITH_REVIEWED_CANDIDATE_SHA256
 mkdir -m 0700 "$monitor_upgrade"
@@ -217,7 +217,7 @@ systemctl --user cat stargate-daily-alert-consumer.timer > "$monitor_upgrade/pre
 "$monitor_java_home/bin/jlink" --version
 ```
 
-Expect Java/compiler/linker `25.0.5` and the intended build `25.0.5+8`. Use the
+Expect Java/compiler/linker `25.0.5.1` and the intended build `25.0.5.1+2`. Use the
 wizard's qualified absolute JDK path or another reviewed protected JDK, not the
 shell's unqualified `java`. Ensure the JAR and its parents are owned by the
 operator and not writable by another user; keep this versioned directory in place
@@ -258,7 +258,7 @@ mkdir -m 0755 "$monitor_upgrade/probe/output"
 jq --arg p "$monitor_upgrade/probe" '.recorder=($p+"/recorder") | .output=($p+"/output") | .ledger=($p+"/ledger") | .dispatch=($p+"/dispatch")' "$monitor_config" > "$monitor_upgrade/probe/config.json"
 chmod 0600 "$monitor_upgrade/probe/config.json"
 "$monitor_java_home/bin/java" -jar "$monitor_upgrade/monitor.jar" collect --config "$monitor_upgrade/probe/config.json"
-jq -e '.checks.temurin.observation.source_baseline | .source == "containers/java-runtime.json" and .version == "25.0.5"' "$monitor_upgrade/probe/recorder/latest-report.json"
+jq -e '.checks.temurin.observation.source_baseline | .source == "containers/java-runtime.json" and .version == "25.0.5.1"' "$monitor_upgrade/probe/recorder/latest-report.json"
 ```
 
 Expect collection exit 0 and baseline check `true`. Exit 2 means unknown collection;

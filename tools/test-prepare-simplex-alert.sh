@@ -4,7 +4,7 @@
 set -euo pipefail
 umask 077
 root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)
-: "${STARGATE_TEST_SIMPLEX_RELEASE:?Select the authenticated local v7.0.0 release directory}"
+: "${STARGATE_TEST_SIMPLEX_RELEASE:?Select the authenticated local pinned SimpleX release directory}"
 : "${STARGATE_TEST_RUNTIME_INPUTS:?Select the qualified local prepared runtime context}"
 proof=$(mktemp -d "${TMPDIR:-/tmp}/stargate-simplex-shell-test.XXXXXXXX")
 cleanup() { rm -rf -- "$proof"; }

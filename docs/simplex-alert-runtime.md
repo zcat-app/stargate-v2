@@ -1,6 +1,6 @@
 # Optional SimpleX outbound alert runtime
 
-This optional runtime contains a dedicated SimpleX v7.0.0 process and one-shot
+This optional runtime contains a dedicated SimpleX v7.1.4 process and one-shot
 sender. It is a building block for the requested daily security-monitor alerts
 and failed-check alerts. The separate [Java monitor](java-monitor.md) now
 produces and schedules those alerts; this runtime only sends them. It
@@ -21,7 +21,7 @@ who can reach it; network namespace isolation contains that API.
 ## Prepare and review
 
 The runtime targets Linux amd64 with the existing documented patched runtime image
-inputs and Java 25.0.5. It does not supply a clean-host builder. Prepare the normal
+inputs and Java 25.0.5.1. It does not supply a clean-host builder. Prepare the normal
 runtime inputs using [the container runbook](../containers/README.md); they contain
 runtime libraries and the JRE, not live application state. Build this independent
 module explicitly:
@@ -34,7 +34,8 @@ bash tools/prepare-simplex-alert.sh \
 ```
 
 The release directory must contain `simplex-chat`, `_sha256sums`,
-`_sha256sums.asc`, and `release-key.asc` from the official v7.0.0 release. The
+`_sha256sums.asc`, and `release-key.asc` from the official release pinned in
+`containers/simplex-alert/release.json`. The
 preparer performs no download and starts no services. It checks the pinned binary
 SHA-256, exact artifact entry in the signed manifest, and a valid detached GPG
 signature from fingerprint `BBDF7BDAD1548B16836AF5B9D53BDFD153C366BA`.
@@ -42,7 +43,7 @@ This key matches the upstream-published fingerprint; there has been no independe
 out-of-band authentication of its owner. The manifest, signature, key, release
 pin, AGPL license, source location, and image input hashes are retained in the
 image. The original upstream binary is used without modification. The source is
-[SimpleX v7.0.0](https://github.com/simplex-chat/simplex-chat/tree/v7.0.0).
+[SimpleX v7.1.4](https://github.com/simplex-chat/simplex-chat/tree/v7.1.4).
 
 The additional two upstream-required runtime libraries come from the repository's
 immutable Ubuntu base image; their exact versions and file hashes are recorded in
@@ -50,10 +51,8 @@ immutable Ubuntu base image; their exact versions and file hashes are recorded i
 coverage gaps](simplex-alert-security-review.md) before deployment. A hash match
 is not a security assessment.
 
-The release binary SHA-256 is
-`393279f37a57ff7a63b92cffbd583d1d8abb5ea13e28f8caea74539d7c8db91d`
-and it reports `SimpleX Chat v7.0.0.11`. The pin matches
-[InfoChat's recorded integration](https://github.com/zcat-app/infochat/tree/3757850ef7d66d4b2d62cd3cf0a0fa17c1b7e637).
+The runtime reports `SimpleX Chat v7.1.4.0`. The authenticated binary digest
+and the source and server dependency commits are in the release pin.
 
 Before starting, supply a **dedicated, stopped, already established SimpleX
 profile** with the intended recipient contact. Its database prefix must be `db`
@@ -70,7 +69,8 @@ confirmation; a required migration prompts for approval, and the launcher's
 `/dev/null` stdin supplies EOF so startup fails before that migration. If an
 upgrade is needed, perform it as a separate offline operator step with a verified,
 consistent stopped backup, then verify the migrated profile before enabling this
-runtime. Normal compatible-schema operation still writes ordinary SimpleX state;
+runtime. For a downgrade, restore the pre-upgrade database backup before
+starting the older binary. Normal compatible-schema operation still writes ordinary SimpleX state;
 this is not a read-only profile or a backup/migration workflow.
 
 The runtime launcher does not create profiles, pair contacts or import databases.

@@ -15,14 +15,14 @@ user roles or inbound command handler.
 
 ## Release and API boundaries
 
-The pinned binary is SimpleX v7.0.0.11 with SHA-256
-`393279f37a57ff7a63b92cffbd583d1d8abb5ea13e28f8caea74539d7c8db91d`.
-The v7.0.0 source has `--database`/`-d` as the path prefix and an empty default
+The pinned binary is SimpleX v7.1.4.0 with SHA-256
+`344e52fb4794bf86b0ec01534692f9b930de2c36b3af21dad45045e5af59f22f`.
+The v7.1.4 source has `--database`/`-d` as the path prefix and an empty default
 `--key` in `src/Simplex/Chat/Options/SQLite.hs`; its two filenames are
 `<prefix>_chat.db` and `<prefix>_agent.db`. The parser and startup in
 `src/Simplex/Chat/Options.hs` and `src/Simplex/Chat/Core.hs` create the named bot
 profile only if no active user exists. That metadata does not install an inbound
-handler. The retained source archive is the v7.0.0 tree; matching its version string to the
+handler. The retained source archive is the v7.1.4 tree; matching its version string to the
 signed binary is not a cryptographic source-to-binary attestation.
 
 In v7, `-e /connect` executes the command then exits after `-t` seconds;
@@ -36,10 +36,10 @@ also provides `/_contacts <userId>` on the local WebSocket API with numeric
 port in this procedure. `/_contacts` is read-only, but the server can execute
 other commands: only a trusted local operator or process may access its API.
 
-Source references: [v7.0.0 options](https://github.com/simplex-chat/simplex-chat/blob/v7.0.0/src/Simplex/Chat/Options.hs),
-[database options](https://github.com/simplex-chat/simplex-chat/blob/v7.0.0/src/Simplex/Chat/Options/SQLite.hs),
-[invitation implementation](https://github.com/simplex-chat/simplex-chat/blob/v7.0.0/src/Simplex/Chat/Library/Commands.hs),
-[CLI guide](https://github.com/simplex-chat/simplex-chat/blob/v7.0.0/docs/CLI.md).
+Source references: [v7.1.4 options](https://github.com/simplex-chat/simplex-chat/blob/v7.1.4/src/Simplex/Chat/Options.hs),
+[database options](https://github.com/simplex-chat/simplex-chat/blob/v7.1.4/src/Simplex/Chat/Options/SQLite.hs),
+[invitation implementation](https://github.com/simplex-chat/simplex-chat/blob/v7.1.4/src/Simplex/Chat/Library/Commands.hs),
+[CLI guide](https://github.com/simplex-chat/simplex-chat/blob/v7.1.4/docs/CLI.md).
 
 ## Prepare
 

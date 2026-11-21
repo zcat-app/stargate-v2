@@ -24,7 +24,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-/** Outbound-only candidate for a separately operated simplex-chat v7.0.0 process. */
+/** Outbound alert transport for a separately operated SimpleX Chat process. */
 public final class SimplexAlertTransport {
     private static final int MAX_TEXT_BYTES = 4000;
     private static final int MAX_FRAME_CHARS = 1_048_576;

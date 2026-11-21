@@ -16,7 +16,7 @@ prerequisites after confirmation and offers this guided step if they are missing
 A failed check does not publish a configuration; rerun after setup is ready.
 
 Checks cover Linux amd64, Docker CLI, Compose 2.24.4+ and daemon access. The Java
-profiles require the declared Java 25.0.5 runtime, compiler and linker together.
+profiles require the declared Java 25.0.5.1 runtime, compiler and linker together.
 The build profile additionally checks the qualified Maven 3.10.0 baseline, its
 effective Java runtime and Git. Different versions are reported as needing setup,
 not silently treated as qualified. Native patched builds, successful native

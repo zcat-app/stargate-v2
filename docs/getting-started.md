@@ -26,12 +26,12 @@ between them. You never need the operator's administrator token.
 Install from
 [Mozilla Add-ons](https://addons.mozilla.org/en-US/firefox/addon/stargate-browser-proxy/)
 for a normal, signed installation that stays across restarts and updates
-itself. Then set the private-windows permission described below and continue
+itself. The store build requires Firefox 140 or later. Then set the private-windows permission described below and continue
 with [Connect](#connect-to-your-server).
 
-The public v0.1.0-rc.3 GitHub release also provides extension version **0.8.8**
+The public v0.1.0 GitHub release also provides extension version **0.8.9**
 as `stargate-firefox.xpi`, a ZIP-format add-on for temporary loading. The GitHub
-RC's XPI is unsigned by Mozilla, so its normal installer may say it is not
+release's XPI is unsigned by Mozilla, so its normal installer may say it is not
 verified. Use temporary loading below; do not disable signature checks.
 
 1. Save the package somewhere you can find again. If clicking the link opens the
@@ -61,7 +61,7 @@ code. While the extension is absent, it cannot provide Stargate routing.
 ## Brave
 
 Brave distribution stays on GitHub. The public RC ZIP is extension version
-**0.8.8**. Install it manually below;
+**0.8.9**. Install it manually below;
 there is no Chrome Web Store listing or automatic update channel. For later
 packages, follow the [manual-update steps](user-guide.md#update-or-return-after-a-restart).
 

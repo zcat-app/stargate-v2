@@ -49,7 +49,7 @@ for a normal, signed installation that stays across restarts and updates
 itself; then set the private-windows permission in step 4 and continue
 connecting below.
 
-These steps cover the public GitHub v0.1.0-rc.3 **Firefox 0.8.8** package,
+These steps cover the public GitHub v0.1.0 **Firefox 0.8.9** package,
 which is unsigned by Mozilla: normal installation of the RC can report that
 the add-on is not verified, and a temporary add-on must be loaded again after
 every Firefox restart. Use temporary loading below; do not disable signature
@@ -230,7 +230,7 @@ Firefox installations from
 update automatically. For the GitHub packages, obtain updates from your
 operator or the project's GitHub releases and
 [verify the downloads](release-readiness.md#verify-the-downloads). The public
-v0.1.0-rc.3 packages are 0.8.8. Do not uninstall or clear extension data as a
+v0.1.0 packages are 0.8.9. Do not uninstall or clear extension data as a
 routine update step.
 
 - **Firefox (temporary loading):** replace the saved XPI at the same location,

@@ -25,8 +25,22 @@ class ReleaseCollectorsTest {
     static final String GHSA = "GHSA-2345-6789-cfgh";
     @Test void sharedJavaPinIsStrictAndKeepsVersion() throws Exception {
         assertEquals("25.0.5", ReleaseCollectors.javaBaseline(bytes("{\"version\":\"25.0.5\"}")));
+        assertEquals("25.0.5.1", ReleaseCollectors.javaBaseline(bytes("{\"version\":\"25.0.5.1\"}")));
         for (String value : List.of("{}", "{\"version\":\"other\"}", "{\"version\":\"25.0.5\",\"version\":\"25.0.6\"}", "{\"version\":\"25.0.5\",\"extra\":true}"))
             assertThrows(Exception.class, () -> ReleaseCollectors.javaBaseline(bytes(value)));
+    }
+    @Test void recognizesQuarkusAfterNettyBomOverride() throws Exception {
+        fixture();
+        Path pom = root.resolve("pom.xml");
+        String withNetty = Files.readString(pom)
+                .replace("</properties>", "<netty.version>4.1.141.Final</netty.version></properties>")
+                .replace("<dependencies>", "<dependencies><dependency><groupId>io.netty</groupId>"
+                        + "<artifactId>netty-bom</artifactId><version>${netty.version}</version>"
+                        + "<type>pom</type><scope>import</scope></dependency>");
+        Files.writeString(pom, withNetty);
+        assertEquals("3.40.1.1", ReleaseCollectors.quarkusPin(root, "3.40"));
+        Files.writeString(pom, withNetty.replace("netty-bom", "unexpected-bom"));
+        assertThrows(Exception.class, () -> ReleaseCollectors.quarkusPin(root, "3.40"));
     }
     static byte[] bytes(String value) { return value.getBytes(StandardCharsets.UTF_8); }
     static ReleaseCollectors.Response response(String value) { return new ReleaseCollectors.Response(bytes(value), null); }

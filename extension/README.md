@@ -2,9 +2,10 @@
 
 ## Distribution status
 
-A Mozilla-signed permanent-install package is not available yet. Released Firefox and Brave packages
-are 0.8.8. Firefox uses temporary loading until Mozilla-signed distribution is
-available; Brave uses unpacked installation and manual updates from GitHub.
+The [Mozilla Add-ons build](https://addons.mozilla.org/en-US/firefox/addon/stargate-browser-proxy/)
+supports permanent installation and automatic updates. The GitHub release provides
+the unsigned Firefox 0.8.9 package for temporary loading and Brave 0.8.9 for
+unpacked installation and manual updates.
 See [downloads](../docs/release-readiness.md) and
 [privacy policy](../docs/privacy-policy.md).
 
@@ -14,7 +15,7 @@ technical details below explain settings, routing and their limits.
 
 Start with the bundled [Firefox / Brave quick-start](src/quick-start.html). It is
 also available from the extension’s setup page and Help, without an internet
-request. It covers the unsigned GitHub RC packages: Firefox uses temporary loading, and
+request. It covers the GitHub packages: Firefox uses temporary loading, and
 Brave uses unpacked installation.
 
 The current [container setup](../containers/README.md) pairs through the
@@ -45,7 +46,7 @@ allow Stargate to **Run in Private Windows**: Firefox's proxy-settings API
 requires this permission even when configuring regular windows. Regular windows
 are the verified use case. Temporary unsigned add-ons disappear when Firefox
 exits; permanent installation in stable Firefox requires Mozilla signing. The
-RC package is not Mozilla-signed. Source manifests declare 0.8.9; the released package remains 0.8.8.
+GitHub XPI is for temporary loading. For permanent installation, use Mozilla Add-ons.
 
 For Brave, open `brave://extensions`, enable **Developer mode → Load unpacked**
 and select `extension/target/brave`. In privacy settings switch off both

@@ -11,7 +11,7 @@ mkdir -p "$TEST/project/tools" "$TEST/project/containers/setup"
 cp "$ROOT/tools/setup-prerequisites.sh" "$ROOT/tools/with-toolchain.sh" "$TEST/project/tools/"
 cp "$ROOT/containers/java-runtime.json" "$TEST/project/containers/"
 cp "$ROOT/containers/setup/"* "$TEST/project/containers/setup/"
-export PREREQ_TEST=$TEST PREREQ_CACHE="$ROOT/target/prerequisite-downloads"
+export PREREQ_TEST=$TEST PREREQ_CACHE="${STARGATE_PREREQ_TEST_CACHE:-$ROOT/target/prerequisite-downloads}"
 cat > "$TEST/bin/docker" <<'SH'
 #!/usr/bin/env bash
 printf '%s\n' "$*" >> "$PREREQ_TEST/docker-calls"
@@ -65,17 +65,17 @@ if run --guided tools </dev/null > "$TEST/eof.log"; then exit 1; else [[ $? == 1
 printf 'PASS cancellation/EOF performs no installation\n'
 # A successful process alone is insufficient: all effective Java tools and the
 # Maven JVM must match the selected baseline.
-printf '#!/usr/bin/env bash\nprintf "openjdk 25.0.5 fixture\\n"\n' > "$TEST/bin/java"
+printf '#!/usr/bin/env bash\nprintf "openjdk 25.0.5.1 fixture\\n"\n' > "$TEST/bin/java"
 printf '#!/usr/bin/env bash\nprintf "javac 21.0.1\\n"\n' > "$TEST/bin/javac"
-printf '#!/usr/bin/env bash\nprintf "25.0.5\\n"\n' > "$TEST/bin/jlink"
+printf '#!/usr/bin/env bash\nprintf "25.0.5.1\\n"\n' > "$TEST/bin/jlink"
 if run --check tools > "$TEST/mixed-compiler.log"; then exit 1; else [[ $? == 2 ]]; fi
-printf '#!/usr/bin/env bash\nprintf "javac 25.0.5\\n"\n' > "$TEST/bin/javac"
+printf '#!/usr/bin/env bash\nprintf "javac 25.0.5.1\\n"\n' > "$TEST/bin/javac"
 printf '#!/usr/bin/env bash\nprintf "21.0.1\\n"\n' > "$TEST/bin/jlink"
 if run --check tools > "$TEST/mixed-linker.log"; then exit 1; else [[ $? == 2 ]]; fi
-printf '#!/usr/bin/env bash\nprintf "25.0.5\\n"\n' > "$TEST/bin/jlink"
+printf '#!/usr/bin/env bash\nprintf "25.0.5.1\\n"\n' > "$TEST/bin/jlink"
 printf '#!/usr/bin/env bash\nprintf "Apache Maven 3.10.0 fixture\\nJava version: 21.0.1, fixture\\n"\n' > "$TEST/bin/mvn"
 if run --check build > "$TEST/mixed-maven.log"; then exit 1; else [[ $? == 2 ]]; fi
-printf '#!/usr/bin/env bash\nprintf "Apache Maven 3.8.0 fixture\\nJava version: 25.0.5, fixture\\n"\n' > "$TEST/bin/mvn"
+printf '#!/usr/bin/env bash\nprintf "Apache Maven 3.8.0 fixture\\nJava version: 25.0.5.1, fixture\\n"\n' > "$TEST/bin/mvn"
 if run --check build > "$TEST/old-maven.log"; then exit 1; else [[ $? == 2 ]]; fi
 for tool in java javac jlink mvn; do printf '#!/usr/bin/env bash\nexit 1\n' > "$TEST/bin/$tool"; done
 printf 'PASS mixed compilers/linkers/Maven JVM and unqualified Maven refused\n'
@@ -137,7 +137,7 @@ if [[ -f "$PREREQ_CACHE/temurin-jdk.tar.gz" && -f "$PREREQ_CACHE/maven.tar.gz" ]
  [[ ! -e "$TEST/sudo-calls" ]]
  bash "$TEST/project/tools/with-toolchain.sh" java --version > "$TEST/java-version.txt"
  bash "$TEST/project/tools/with-toolchain.sh" mvn --version > "$TEST/maven-version.txt"
- grep -Fq 'openjdk 25.0.5 ' "$TEST/java-version.txt"
+ grep -Fq 'openjdk 25.0.5.1 ' "$TEST/java-version.txt"
  grep -Fq 'Apache Maven 3.10.0' "$TEST/maven-version.txt"
  printf 'class SelectedJdkProof { public static void main(String[] args) { if (Runtime.version().feature()!=25) throw new IllegalStateException(); System.out.println("JAVA_SOURCE_25_PASS"); } }\n' > "$TEST/SelectedJdkProof.java"
  bash "$TEST/project/tools/with-toolchain.sh" java --source 25 "$TEST/SelectedJdkProof.java" > "$TEST/source-proof.txt"
@@ -147,7 +147,7 @@ if [[ -f "$PREREQ_CACHE/temurin-jdk.tar.gz" && -f "$PREREQ_CACHE/maven.tar.gz" ]
  chmod 600 "$TEST/project/.local-setup/java-home"
  mkdir -m 700 "$TEST/empty-java"
  printf '%s\n' "$TEST/empty-java" > "$TEST/project/.local-setup/java-home"
- printf '#!/usr/bin/env bash\nprintf "openjdk 25.0.5 fallback\\n"\n' > "$TEST/bin/java"
+ printf '#!/usr/bin/env bash\nprintf "openjdk 25.0.5.1 fallback\\n"\n' > "$TEST/bin/java"
  if bash "$TEST/project/tools/with-toolchain.sh" java --version > "$TEST/missing-selected.log" 2>&1; then exit 1; fi
  grep -Fq 'toolchain is incomplete' "$TEST/missing-selected.log"
  printf 'PASS real signatures/JDK/Maven, persistence and unsafe selection refusal\n'

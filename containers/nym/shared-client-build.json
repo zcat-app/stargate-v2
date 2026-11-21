@@ -1,5 +1,5 @@
 {
-  "sourceCommit": "28904698fd68337cc722d51ab21f29f4fd6c56ce",
+  "sourceCommit": "1abb0cf1b92f135e71c84b738bcd19b97916a3eb",
   "patchSha256": "ad98a7adf558a3683db1fa934c43776867740ea989e6f51a141b3bb49747699c",
   "sourceSha256": {
     "common/socks5/proxy-helpers/src/connection_controller.rs": "6dd9915a0fdf6b7ad75650ab253417f6f18e8999fef6f37fb3f8a7f90ed5fbcc",

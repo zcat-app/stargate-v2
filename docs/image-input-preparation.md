@@ -2,7 +2,7 @@
 
 This prepares the context consumed by `containers/Dockerfile`. It does not build
 final app/Tor/I2P/Nym images, start services, touch state volumes or publish.
-The host needs Linux amd64, the pinned Java **25.0.5 JDK**, Maven to build the
+The host needs Linux amd64, the pinned Java **25.0.5.1 JDK**, Maven to build the
 helper, and Docker access. A deployed image needs no host JDK. The source baseline
 is declared once in `containers/java-runtime.json`; the monitor reads the same
 declaration. Changing that declaration requires separate runtime qualification.
@@ -16,7 +16,9 @@ preparer does not deploy a monitor.
 
 Use the intended checkout and its verified native outputs:
 
-- `target/native/`: the pinned patched libc package and `build-hashes.json`.
+- `target/native/`: the Ubuntu Noble amd64 `libc6` package pinned in
+  `containers/native/libc-runtime.json`. The Ubuntu security release includes
+  the previous Stargate backport.
 - `target/i2p-isolation-build/`: matching I2P and owner executables, patch/input
   hashes and `build-record.json`.
 - For Nym, a selected build directory with `build-record.json` and
@@ -30,6 +32,17 @@ compile native code, waive failing native tests, replace local patches with
 upstream binaries, initialize routers or choose a Nym requester. An old build
 record failing a new gate is a reason to select/prepare compatible inputs, not
 edit the record or remove the check.
+
+Stage the exact package before preparation. The preparer independently checks
+its SHA-256 before use:
+
+```sh
+mkdir -p target/native
+libc_url=$(jq -er .url containers/native/libc-runtime.json)
+libc_file="target/native/${libc_url##*/}"
+curl --fail --silent --show-error --proto '=https' --output "$libc_file" "$libc_url"
+printf '%s  %s\n' "$(jq -er .sha256 containers/native/libc-runtime.json)" "$libc_file" | sha256sum --check
+```
 
 Run from the checkout, as the ordinary Docker-authorized operator:
 
@@ -73,8 +86,7 @@ before replacement; use a fresh output path for a first run.
 
 ## What happens and what to check
 
-Before downloads/builds, the helper checks the Java baseline, libc patch/package
-hashes and native build version, I2P patches/owner/builder/binary hashes, and the
+Before downloads/builds, the helper checks the Java baseline, the pinned Ubuntu libc package hash, I2P patches/owner/builder/binary hashes, and the
 selected Nym security/lifecycle/shared-client bindings, binary and regression flags.
 Package artifacts are verified against the existing Tor/I2P SHA-256 pins. The
 pinned authenticated release inputs remain the trust input; a checksum alone

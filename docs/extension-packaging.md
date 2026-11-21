@@ -1,8 +1,8 @@
 # Build extension packages
 
 Prepared-package users need only a browser. Current source manifests declare
-0.8.9; the rc.3 Firefox and Brave packages are 0.8.8. Build the matching
-source revision when reproducing a released package.
+0.8.9, matching the Firefox and Brave packages for Stargate v0.1.0. Build the
+matching source revision when reproducing a released package.
 
 Both packages include [the privacy policy](privacy-policy.md) as PRIVACY.md and
 a local, script-free privacy.html. The Java builder HTML-escapes policy text.

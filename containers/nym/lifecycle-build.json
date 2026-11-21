@@ -1,5 +1,5 @@
 {
-  "sourceCommit": "28904698fd68337cc722d51ab21f29f4fd6c56ce",
+  "sourceCommit": "1abb0cf1b92f135e71c84b738bcd19b97916a3eb",
   "patchSha256": "236b93a250d49e91700c04b2bf6a21ff6e2439a18ae45bef3fd776492572b21b",
   "sourceSha256": {
     "common/socks5-client-core/src/lib.rs": "fac9f5986a7d7f5d85b686ee32a66fee7cbaabb755e7f33c43ff792512aa1fe6"

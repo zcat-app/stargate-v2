@@ -179,7 +179,21 @@ final class ReleaseCollectors {
     static String quarkusPin(Path root, String family) throws Exception {
         require(family != null && family.matches(NUM + "\\." + NUM), "unsupported family"); Element pom = xml(read(root.resolve("pom.xml"), LIMIT)); require("project".equals(pom.getLocalName()) && NS.equals(pom.getNamespaceURI()), "unexpected POM root"); Element props = one(pom, "properties", NS);
         require(field(props, "quarkus.platform.group-id", NS).equals("io.quarkus.platform") && field(props, "quarkus.platform.artifact-id", NS).equals("quarkus-bom"), "unexpected BOM coordinates"); String pin = field(props, "quarkus.platform.version", NS); version(pin); require(pin.startsWith(family + "."), "declared version is outside specified family");
-        var imports = children(one(one(pom, "dependencyManagement", NS), "dependencies", NS), "dependency", NS); require(imports.size() == 1, "unexpected or ambiguous BOM import"); Element dep = imports.getFirst(); String[] names = {"groupId", "artifactId", "version", "type", "scope"}, values = {"${quarkus.platform.group-id}", "${quarkus.platform.artifact-id}", "${quarkus.platform.version}", "pom", "import"}; for (int i = 0; i < names.length; i++) require(field(dep, names[i], NS).equals(values[i]), "unexpected BOM import"); return pin;
+        var imports = children(one(one(pom, "dependencyManagement", NS), "dependencies", NS), "dependency", NS);
+        require(imports.size() == 1 || imports.size() == 2, "unexpected or ambiguous BOM import");
+        if (imports.size() == 2) {
+            require(field(props, "netty.version", NS).matches("[0-9]+(?:\\.[0-9]+){2}\\.Final"),
+                    "unexpected Netty version");
+            checkBom(imports.getFirst(), "io.netty", "netty-bom", "${netty.version}");
+        }
+        checkBom(imports.getLast(), "${quarkus.platform.group-id}", "${quarkus.platform.artifact-id}",
+                "${quarkus.platform.version}");
+        return pin;
+    }
+    private static void checkBom(Element dep, String group, String artifact, String version) throws Invalid {
+        require(field(dep, "groupId", NS).equals(group) && field(dep, "artifactId", NS).equals(artifact)
+                && field(dep, "version", NS).equals(version) && field(dep, "type", NS).equals("pom")
+                && field(dep, "scope", NS).equals("import"), "unexpected BOM import");
     }
     static ObjectNode quarkusCompare(String pin, String family, byte[] bytes) throws Exception {
         Element root = xml(bytes); require("metadata".equals(root.getLocalName()) && root.getNamespaceURI() == null && field(root, "groupId", null).equals("io.quarkus.platform") && field(root, "artifactId", null).equals("quarkus-bom"), "unexpected metadata coordinates"); Element versioning = one(root, "versioning", null); String updated = field(versioning, "lastUpdated", null);
@@ -193,7 +207,7 @@ final class ReleaseCollectors {
         require(count > 0 && seen.contains(pin) && pin.equals(finals.get(version(pin))), "declared version absent from metadata"); String greatest = finals.lastEntry().getValue(); return MonitorFiles.object().put("status", greatest.equals(pin) ? "current" : "newer_release").put("declared_version", pin).put("greatest_numeric_version", greatest).put("family", family).put("metadata_last_updated", timestamp);
     }
     static String javaBaseline(byte[] bytes) throws Exception {
-        JsonNode pin = json(bytes); require(pin.isObject() && pin.size() == 1 && pin.path("version").isTextual() && pin.path("version").asText().matches("25(?:\\.[0-9]+){2}"), "unrecognized Java baseline"); return pin.path("version").asText();
+        JsonNode pin = json(bytes); require(pin.isObject() && pin.size() == 1 && pin.path("version").isTextual() && pin.path("version").asText().matches("25(?:\\.[0-9]+){2,3}"), "unrecognized Java baseline"); return pin.path("version").asText();
     }
     static ObjectNode temurin(JsonNode items) throws Invalid {
         require(items.isArray() && items.size() == 1 && items.get(0).isObject(), "expected exactly one asset"); JsonNode asset = items.get(0), binary = asset.path("binary"), version = asset.path("version"); require(binary.isObject() && version.isObject() && asset.path("vendor").asText().equals("eclipse"), "missing binary or version");

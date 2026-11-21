@@ -34,11 +34,16 @@ public final class PrepareImageInputs {
         return new Options(root,out==null?root.resolve("target/container"):out,evidence==null?root.resolve("scratch/research/i2p"):evidence,nym==null?root.resolve("target/nym-build"):nym,include);
     }
     static NativeInputs verify(Options o)throws Exception {
-        Path root=o.project();var libc=json(root.resolve("containers/native/glibc-inputs.json"));
-        require(text(libc,"local_version").matches("[A-Za-z0-9.+~:-]+"),"Invalid libc version");
-        for(var patch:libc.path("patches"))checked(root.resolve("containers/native").resolve(text(patch,"file")),patch.get("sha256"));
-        Path deb=root.resolve("target/native/libc6_"+text(libc,"local_version")+"_amd64.deb");regular(deb);
-        JsonNode nativeRecord=json(root.resolve("target/native/build-hashes.json"));require(nativeRecord.path("local_version").equals(libc.path("local_version")),"libc build version mismatch");checked(deb,nativeRecord.path("debs").get(deb.getFileName().toString()));
+        Path root = o.project();
+        var libc = json(root.resolve("containers/native/libc-runtime.json"));
+        String libcVersion = text(libc, "version");
+        require(libcVersion.matches("[A-Za-z0-9.+~:-]+"), "Invalid libc version");
+        require(text(libc, "package").equals("libc6"), "Unexpected libc package");
+        String libcFilename = "libc6_" + libcVersion + "_amd64.deb";
+        require(text(libc, "url").equals("https://security.ubuntu.com/ubuntu/pool/main/g/glibc/" + libcFilename),
+                "Unexpected libc package URL");
+        Path deb = root.resolve("target/native").resolve(libcFilename);
+        checked(deb, libc.get("sha256"));
         JsonNode i2p=json(root.resolve("target/i2p-isolation-build/build-record.json"));
         require(text(i2p,"sourceCommit").matches("[a-f0-9]{40}"),"Invalid I2P commit");
         for(var entry:Map.of("identity-fail-closed.patch","patchSha256","lifecycle-ack.patch","lifecyclePatchSha256","owner.c","ownerSourceSha256","Dockerfile.builder","builderDockerfileSha256").entrySet())checked(root.resolve("containers/i2p/"+entry.getKey()),i2p.get(entry.getValue()));
@@ -61,7 +66,7 @@ public final class PrepareImageInputs {
             require(nym.path("sourceCommit").equals(release.path("commit")),"Nym release/source mismatch");
             checked(o.nymBuild().resolve("source/target/release/nym-socks5-client"),nym.get("binarySha256"));
         }
-        return new NativeInputs(libc,deb,nativeRecord.path("debs").get(deb.getFileName().toString()),i2p,nym,release);
+        return new NativeInputs(libc,deb,libc.get("sha256"),i2p,nym,release);
     }
     static void equalFields(JsonNode actual,JsonNode pin,List<String> fields)throws Exception {
         for(String field:fields)require(pin.hasNonNull(field)&&actual.hasNonNull(field)&&actual.get(field).equals(pin.get(field)),"Nym security build input mismatch: "+field);
@@ -69,7 +74,7 @@ public final class PrepareImageInputs {
     static String javaBaseline(Path project)throws Exception {
         var pin=json(project.resolve("containers/java-runtime.json"));
         require(pin.isObject()&&pin.size()==1,"Java declaration must contain only version");String version=text(pin,"version");
-        require(version.matches("25(?:\\.[0-9]+){2}"),"Invalid Java baseline");return version;
+        require(version.matches("25(?:\\.[0-9]+){2,3}"),"Invalid Java baseline");return version;
     }
     static void outputBoundary(Options o)throws Exception {
         Path project=o.project(),output=o.output(),target=project.resolve("target");
@@ -104,7 +109,7 @@ public final class PrepareImageInputs {
                 Path cacerts=java.resolve("lib/security/cacerts");Files.delete(cacerts);Files.copy(Path.of(System.getProperty("java.home"),"lib/security/cacerts").toRealPath(),cacerts);mode(cacerts,0644);
                 write(stage.resolve("jdk-source.sha256"),hash(Path.of(System.getProperty("java.home"),"lib/modules"))+"\n");
                 Path app=stage.resolve("app");directories(app);write(app.resolve("dns.security"),"networkaddress.cache.ttl=1\nnetworkaddress.cache.negative.ttl=1\n");
-                copy(o.project().resolve("proxy/target/stargate-proxy-0.1.0-SNAPSHOT.jar"),app.resolve("proxy.jar"));tree(o.project().resolve("manager/target/quarkus-app"),app.resolve("manager"));
+                runtimeFile(o.project().resolve("proxy/target/stargate-proxy-0.1.0-SNAPSHOT.jar"),app.resolve("proxy.jar"));tree(o.project().resolve("manager/target/quarkus-app"),app.resolve("manager"));
                 Files.createDirectory(stage.resolve("packages"));var manifest=JSON.createArrayNode();manifest.addAll((ArrayNode)json(o.project().resolve("containers/tor-packages.json")));manifest.addAll((ArrayNode)json(o.project().resolve("containers/i2p-packages.json")));
                 var filenames=new HashSet<String>();
                 for(var entry:manifest) {
@@ -116,14 +121,14 @@ public final class PrepareImageInputs {
                 }
                 copy(inputs.libcDeb(),stage.resolve("packages/"+inputs.libcDeb().getFileName()));
                 checked(stage.resolve("packages/"+inputs.libcDeb().getFileName()),inputs.libcHash());
-                copy(o.project().resolve("containers/torrc"),stage.resolve("torrc"));copy(o.project().resolve("containers/i2pd.conf"),app.resolve("i2pd.conf"));
+                runtimeFile(o.project().resolve("containers/torrc"),stage.resolve("torrc"));runtimeFile(o.project().resolve("containers/i2pd.conf"),app.resolve("i2pd.conf"));
                 Path iid=stage.resolve(".os-image-id");
                 commands.run(List.of("docker","build","--target","os-packages","--iidfile",iid.toString(),"--file",o.project().resolve("containers/Dockerfile").toString(),stage.toString()));
                 String sourceImage=Files.readString(iid).strip();Files.delete(iid);
                 RuntimeRoots.Collected collected;
                 try(var source=new RuntimeRoots.DockerSource(commands,sourceImage)){collected=RuntimeRoots.collect(source,stage);}
                 checkPackageVersions(manifest,collected.reports);
-                for(String role:RuntimeRoots.ROLES.keySet())require(collected.reports.path(role).path("packages").path("libc6").path("Version").equals(inputs.libc().path("local_version")),"Source libc version mismatch");
+                for(String role:RuntimeRoots.ROLES.keySet())require(collected.reports.path(role).path("packages").path("libc6").path("Version").equals(inputs.libc().path("version")),"Source libc version mismatch");
                 finish(o,inputs,stage,collected,version);
                 // Evidence failures must precede replacement of the previous context.
                 for(String name:List.of("runtime-files.json","image-inputs.json"))Files.copy(stage.resolve("preparation-evidence/"+name),o.evidence().resolve(name),StandardCopyOption.REPLACE_EXISTING);
@@ -151,7 +156,7 @@ public final class PrepareImageInputs {
         if(o.nym()) {
             Path dest=stage.resolve("nym");directories(dest);
             copy(o.nymBuild().resolve("source/target/release/nym-socks5-client"),dest.resolve("nym-socks5-client"));mode(dest.resolve("nym-socks5-client"),0755);checked(dest.resolve("nym-socks5-client"),inputs.nym().get("binarySha256"));
-            copy(o.project().resolve("LICENSES/Apache-2.0.txt"),dest.resolve("LICENSE-Apache-2.0"));copy(o.project().resolve("containers/nym-release.json"),dest.resolve("release.json"));copy(o.nymBuild().resolve("build-record.json"),dest.resolve("security-build.json"));
+            runtimeFile(o.project().resolve("LICENSES/Apache-2.0.txt"),dest.resolve("LICENSE-Apache-2.0"));runtimeFile(o.project().resolve("containers/nym-release.json"),dest.resolve("release.json"));runtimeFile(o.nymBuild().resolve("build-record.json"),dest.resolve("security-build.json"));
             require(json(dest.resolve("security-build.json")).equals(inputs.nym())&&json(dest.resolve("release.json")).equals(inputs.nymRelease()),"Nym build/release record changed after validation");
             write(dest.resolve("NOTICE"),"Nym SOCKS5 client, Copyright Nym Technologies SA; Apache-2.0. Source: https://github.com/nymtech/nym/tree/"+text(inputs.nymRelease(),"commit")+"\nLocally rebuilt with the Stargate security dependency, lifecycle and shared-client patches; not the unmodified upstream binary.\n");
             for(String path:List.of("data/nym","secrets")){Path dir=stage.resolve("owned-nym/"+path);directories(dir);mode(dir,0700);}

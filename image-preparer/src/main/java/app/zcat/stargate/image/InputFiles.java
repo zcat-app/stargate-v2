@@ -40,11 +40,15 @@ final class InputFiles {
         if(!Files.exists(root,NOFOLLOW_LINKS))return;
         try(var paths=Files.walk(root)){for(Path p:paths.sorted(Comparator.reverseOrder()).toList())Files.delete(p);}
     }
+    static void runtimeFile(Path from, Path to) throws IOException {
+        copy(from, to);
+        mode(to, 0644);
+    }
     static void tree(Path from,Path to)throws IOException {
         require(Files.isDirectory(from,NOFOLLOW_LINKS)&&from.toRealPath().equals(from.toAbsolutePath().normalize()),"Source directory required");
         try(var paths=Files.walk(from)){for(Path p:paths.sorted().toList()) {
             Path dest=to.resolve(from.relativize(p));
-            if(Files.isDirectory(p,NOFOLLOW_LINKS)){directories(dest);mode(dest,0755);}else copy(p,dest);
+            if(Files.isDirectory(p,NOFOLLOW_LINKS)){directories(dest);mode(dest,0755);}else runtimeFile(p,dest);
         }}
     }
     interface Commands {

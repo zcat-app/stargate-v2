@@ -20,12 +20,13 @@ class UpdateEngine {
     final Commands commands;
     ObjectNode state;
     UpdateEngine(Path file,Commands commands)throws Exception {
-        privateFile(file);config=json(file);keys(config,"workDirectory","composeFile","project","releaseUrl","publicKeyFile","publicKeySha256","sourceDirectory","patches","preserve","maxArchiveBytes","localArtifactDirectory","waitSeconds","dockerSocket");
+        privateFile(file);config=json(file);keys(config,"workDirectory","composeFile","project","releaseUrl","publicKeyFile","publicKeySha256","sourceDirectory","patches","preserve","runtimeTransitions","maxArchiveBytes","localArtifactDirectory","waitSeconds","dockerSocket");
         text(config,"project","[a-z0-9][a-z0-9_-]{0,62}");text(config,"publicKeySha256",HASH);
         for(String field:List.of("workDirectory","composeFile","publicKeyFile","sourceDirectory"))require(Path.of(config.path(field).asText()).isAbsolute(),"ABSOLUTE_PATH_REQUIRED");
         privateFile(Path.of(config.path("composeFile").asText()));
         require(config.path("patches").isObject()&&!config.path("patches").isEmpty(),"PATCH_POLICY_REQUIRED");
         require(config.path("preserve").isObject(),"RUNTIME_PRESERVATION_POLICY_REQUIRED");
+        validateRuntimeTransitions();
         require(config.path("maxArchiveBytes").isIntegralNumber()&&config.path("maxArchiveBytes").asLong()>0&&config.path("maxArchiveBytes").asLong()<=16L*1024*1024*1024,"INVALID_ARCHIVE_LIMIT");
         require(config.path("waitSeconds").asInt()>=10&&config.path("waitSeconds").asInt()<=600,"INVALID_WAIT");
         root=Path.of(config.path("workDirectory").asText()).normalize();directory(root,"rwx------");
@@ -148,7 +149,7 @@ class UpdateEngine {
     UpdateManifest saved(boolean expiry)throws Exception {
         Path release=releaseDirectory();
         var m=UpdateManifest.verify(read(release.resolve("release.json"),65536),read(release.resolve("release.sig"),64),read(Path.of(config.path("publicKeyFile").asText()),1024),config.path("publicKeySha256").asText(),expiry?Instant.now():Instant.parse(state.path("verifiedAt").asText()));
-        require(m.id().equals(state.path("releaseId").asText())&&approvalHash(state).equals(state.path("plan").asText()),"PLAN_CHANGED");patches(m);return m;
+        require(m.id().equals(state.path("releaseId").asText())&&approvalHash(state).equals(state.path("plan").asText()),"PLAN_CHANGED");patches(m);bindRuntimeTransitions(m);return m;
     }
     Path releaseDirectory(){String id=text(state,"releaseId",HASH);return root.resolve("releases").resolve(id);}
     static String approvalHash(JsonNode state)throws Exception {
@@ -157,7 +158,7 @@ class UpdateEngine {
     void refresh()throws Exception {
         require(Set.of("EMPTY","PREPARED","ROLLED_BACK","INSTALLED","REVIEW_REQUIRED").contains(state.path("phase").asText()),"FINISH_CURRENT_TRANSACTION_FIRST");
         byte[] bytes=fetchSmall(config.path("releaseUrl").asText(),65536),sig=fetchSmall(config.path("releaseUrl").asText()+".sig",64);
-        var m=UpdateManifest.verify(bytes,sig,read(Path.of(config.path("publicKeyFile").asText()),1024),config.path("publicKeySha256").asText(),Instant.now());patches(m);
+        var m=UpdateManifest.verify(bytes,sig,read(Path.of(config.path("publicKeyFile").asText()),1024),config.path("publicKeySha256").asText(),Instant.now());patches(m);bindRuntimeTransitions(m);
         var rendered=render();require(rendered.path("services").isObject()&&rendered.path("services").properties().stream().map(Map.Entry::getKey).collect(java.util.stream.Collectors.toSet()).equals(SERVICES),"FOUR_SERVICE_CONFIGURATION_REQUIRED");
         var before=observe();configurationMatches(before);for(var service:before.properties())require(service.getValue().path("running").asBoolean(),"ALL_SERVICES_MUST_BE_RUNNING");
         for(var c:m.document().path("changes")) {
@@ -222,7 +223,11 @@ class UpdateEngine {
                 require(JSON.readTree(docker("image","inspect",c.path("toImage").asText())).get(0).path("Id").equals(c.path("toImage")),"CANDIDATE_IMAGE_MISSING");
                 sameImageDefaults(c.path("fromImage").asText(),c.path("toImage").asText());
                 preserved(service,c.path("fromImage").asText());preserved(service,c.path("toImage").asText());
-            } else docker("image","inspect",c.path("fromImage").asText());
+            } else {
+                docker("image","inspect",c.path("fromImage").asText());
+                if (config.path("runtimeTransitions").has(service))
+                    preserved(service,c.path("fromImage").asText());
+            }
         }
         // Refuse drift after potentially slow downloads and immediately before service mutation.
         stable();JsonNode current=observe();if(!rollback)require(sameObservation(current,state.path("before")),"DEPLOYMENT_CHANGED_REVIEW_AGAIN");else compatible(current,m,false);
@@ -263,12 +268,56 @@ class UpdateEngine {
             if(running)require(n.path("running").asBoolean()&&(!n.has("health")||n.path("health").asText().equals("healthy")),"SERVICE_NOT_READY");
         }
     }
+    static boolean validPreservedPath(String path) {
+        return path.matches("/[A-Za-z0-9_./+-]+") && !path.contains("..");
+    }
+    void validateRuntimeTransitions() {
+        if (!config.has("runtimeTransitions")) return;
+        JsonNode transitions = config.path("runtimeTransitions");
+        require(transitions.isObject() && !transitions.isEmpty(), "INVALID_RUNTIME_TRANSITION");
+        for (var entry : transitions.properties()) {
+            String service = entry.getKey();
+            JsonNode transition = entry.getValue();
+            require(SERVICES.contains(service), "INVALID_RUNTIME_TRANSITION");
+            keys(transition, "fromImage", "toImage", "files");
+            String from = text(transition, "fromImage", IMAGE), to = text(transition, "toImage", IMAGE);
+            require(!from.equals(to), "INVALID_RUNTIME_TRANSITION");
+            JsonNode files = transition.path("files");
+            require(files.isObject() && !files.isEmpty(), "INVALID_RUNTIME_TRANSITION");
+            for (var file : files.properties()) {
+                JsonNode previous = config.path("preserve").path(service).path(file.getKey());
+                require(validPreservedPath(file.getKey()) && previous.isTextual() && previous.asText().matches(HASH)
+                        && file.getValue().isTextual() && file.getValue().asText().matches(HASH)
+                        && !previous.equals(file.getValue()), "INVALID_RUNTIME_TRANSITION");
+            }
+        }
+    }
+    void bindRuntimeTransitions(UpdateManifest release) {
+        for (var entry : config.path("runtimeTransitions").properties()) {
+            JsonNode transition = entry.getValue();
+            boolean matched = release.document().path("changes").valueStream().anyMatch(change ->
+                    entry.getKey().equals(change.path("service").asText())
+                    && transition.path("fromImage").equals(change.path("fromImage"))
+                    && transition.path("toImage").equals(change.path("toImage")));
+            require(matched, "RUNTIME_TRANSITION_NOT_IN_SIGNED_RELEASE");
+        }
+    }
+    JsonNode preservedDigest(String service, String image, String path) {
+        JsonNode transition = config.path("runtimeTransitions").path(service);
+        if (!transition.isMissingNode()) {
+            if (image.equals(transition.path("toImage").asText()) && transition.path("files").has(path))
+                return transition.path("files").path(path);
+            require(image.equals(transition.path("fromImage").asText()) || image.equals(transition.path("toImage").asText()),
+                    "RUNTIME_TRANSITION_IMAGE_MISMATCH");
+        }
+        return config.path("preserve").path(service).path(path);
+    }
     void preserved(String service,String image)throws Exception {
         String id=docker("create","--network","none","--read-only","--label","app.zcat.stargate.purpose=upgrade-validation","--entrypoint","/stargate-never-started",image).trim();require(id.matches("[a-f0-9]{64}"),"INVALID_VALIDATION_CONTAINER");
         try {
             for(var e:config.path("preserve").path(service).properties()) {
-                require(e.getKey().matches("/[A-Za-z0-9_./+-]+")&&!e.getKey().contains("..")&&e.getValue().asText().matches(HASH),"INVALID_PRESERVED_FILE");
-                Path out=root.resolve("preserved-file");Files.deleteIfExists(out);docker("cp",id+":"+e.getKey(),out.toString());require(hash(out).equals(e.getValue().asText()),"PRESERVED_RUNTIME_BYTES_CHANGED");Files.delete(out);
+                require(validPreservedPath(e.getKey())&&e.getValue().isTextual()&&e.getValue().asText().matches(HASH),"INVALID_PRESERVED_FILE");
+                Path out=root.resolve("preserved-file");Files.deleteIfExists(out);docker("cp",id+":"+e.getKey(),out.toString());require(hash(out).equals(preservedDigest(service,image,e.getKey()).asText()),"PRESERVED_RUNTIME_BYTES_CHANGED");Files.delete(out);
             }
         } finally {docker("rm","--volumes",id);}
     }

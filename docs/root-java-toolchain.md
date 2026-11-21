@@ -4,7 +4,7 @@ The wizard's `~/.local/share/stargate/toolchains/` JDK is operator-writable and
 hidden by the TLS unit's `ProtectHome=true`. It cannot supply the root job.
 The checked-in unit uses `/usr/bin/java`; that path is not evidence that Java 25
 is installed or protected. This manual Linux amd64 procedure installs the same
-fixed Temurin **25.0.5+8** archive authenticated by the wizard, then selects its
+fixed Temurin **25.0.5.1+2** archive authenticated by the wizard, then selects its
 absolute path in the reviewed TLS unit. It changes no system alternatives.
 Commands below are operator instructions, not an installer or a claim of rollout.
 
@@ -27,7 +27,7 @@ jdk_stage=$(mktemp -d /tmp/stargate-root-jdk-inputs.XXXXXXXX)
 chmod 0700 "$jdk_stage"
 install -m 0600 containers/setup/temurin.asc "$jdk_stage/temurin.asc"
 install -m 0600 containers/setup/prerequisites.sh "$jdk_stage/reviewed-prerequisites.txt"
-jdk_url='https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25.0.5%2B8/OpenJDK25U-jdk_x64_linux_hotspot_25.0.5_8.tar.gz'
+jdk_url='https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25.0.5.1%2B2/OpenJDK25U-jdk_x64_linux_hotspot_25.0.5.1_2.tar.gz'
 curl --fail --location --proto '=https' --proto-redir '=https' --connect-timeout 15 --max-time 120 --max-filesize 268435456 --output "$jdk_stage/temurin-jdk.tar.gz" "$jdk_url"
 curl --fail --location --proto '=https' --proto-redir '=https' --connect-timeout 15 --max-time 120 --max-filesize 268435456 --output "$jdk_stage/temurin-jdk.tar.gz.sig" "$jdk_url.sig"
 sha256sum containers/setup/prerequisites.sh containers/setup/temurin.asc
@@ -39,10 +39,10 @@ existing directory rather than overwriting a prior review. `/root` must be the
 normal root-owned, non-writable-to-others directory, without a symlink.
 
 ```bash
-sudo mkdir -m 0700 /root/stargate-root-jdk-25.0.5-review
-sudo install -o root -g root -m 0600 "$jdk_stage/temurin.asc" "$jdk_stage/reviewed-prerequisites.txt" "$jdk_stage/temurin-jdk.tar.gz" "$jdk_stage/temurin-jdk.tar.gz.sig" /root/stargate-root-jdk-25.0.5-review/
-sudo sha256sum /root/stargate-root-jdk-25.0.5-review/reviewed-prerequisites.txt /root/stargate-root-jdk-25.0.5-review/temurin.asc
-sudo namei -l /root/stargate-root-jdk-25.0.5-review/temurin.asc
+sudo mkdir -m 0700 /root/stargate-root-jdk-25.0.5.1-review
+sudo install -o root -g root -m 0600 "$jdk_stage/temurin.asc" "$jdk_stage/reviewed-prerequisites.txt" "$jdk_stage/temurin-jdk.tar.gz" "$jdk_stage/temurin-jdk.tar.gz.sig" /root/stargate-root-jdk-25.0.5.1-review/
+sudo sha256sum /root/stargate-root-jdk-25.0.5.1-review/reviewed-prerequisites.txt /root/stargate-root-jdk-25.0.5.1-review/temurin.asc
+sudo namei -l /root/stargate-root-jdk-25.0.5.1-review/temurin.asc
 ```
 
 Compare the copied declarations/key and hashes with the reviewed revision and
@@ -61,10 +61,10 @@ before extraction, and never runs anything from the checkout.
 ```bash
 sudo env -i PATH=/usr/bin:/bin /bin/bash -eu -o pipefail <<'SH'
 umask 077
-cd /root/stargate-root-jdk-25.0.5-review
+cd /root/stargate-root-jdk-25.0.5.1-review
 sha256sum -c <<'HASHES'
 a46d5d3ab75c3c86dddf1bfd2957a067a24b1c6b2d2ed2bc69294bf970c5160b  temurin.asc
-68982529869257d0ee6b824ec5aa270ff8b118bb438670da0b97ebdab178d7fb  temurin-jdk.tar.gz
+760f91b22c3efc9bd1b64ff950598231be82928cc807e30691a0e7a2995a62c0  temurin-jdk.tar.gz
 HASHES
 mkdir -m 0700 gpg
 # Private keyring only; no network key retrieval or user keyring.
@@ -79,18 +79,18 @@ for parent in /opt /opt/stargate; do
   test "$(stat -c %u "$parent")" = 0
   test -z "$(find "$parent" -maxdepth 0 -perm /022 -print)"
 done
-jdk_home=/opt/stargate/jdk-25.0.5+8
+jdk_home=/opt/stargate/jdk-25.0.5.1+2
 test ! -e "$jdk_home" && test ! -L "$jdk_home"
 tar -tzf temurin-jdk.tar.gz > archive.paths
 while IFS= read -r entry; do
-  [[ "$entry" == jdk-25.0.5+8/* && "$entry" != /* && "/$entry/" != */../* ]]
+  [[ "$entry" == jdk-25.0.5.1+2/* && "$entry" != /* && "/$entry/" != */../* ]]
 done < archive.paths
 mkdir -m 0700 extracted
 tar --extract --gzip --file temurin-jdk.tar.gz --directory extracted --no-same-owner --no-same-permissions
-test -d extracted/jdk-25.0.5+8 && test ! -L extracted/jdk-25.0.5+8
+test -d extracted/jdk-25.0.5.1+2 && test ! -L extracted/jdk-25.0.5.1+2
 find extracted -type d -exec chmod 0755 {} +
 find extracted -type f -exec chmod a+rX,go-w,u-s,g-s {} +
-mv -T extracted/jdk-25.0.5+8 "$jdk_home"
+mv -T extracted/jdk-25.0.5.1+2 "$jdk_home"
 test -z "$(find "$jdk_home" ! -uid 0 -print -quit)"
 test -z "$(find "$jdk_home" ! -type l -perm /022 -print -quit)"
 # Upstream internal symlinks are allowed only inside this protected tree.
@@ -104,8 +104,8 @@ done < <(find "$jdk_home" -type l -print0)
 SH
 ```
 
-Expect both hashes `OK`, an accepted pinned signer, Java `25.0.5` / Temurin
-`25.0.5+8`, `javac 25.0.5` and linker `25.0.5`. All checks must pass. Authentication
+Expect both hashes `OK`, an accepted pinned signer, Java `25.0.5.1` / Temurin
+`25.0.5.1+2`, `javac 25.0.5.1` and linker `25.0.5.1`. All checks must pass. Authentication
 failure means no extraction; any later failure means **do not select/activate**
 the destination. Retain the error and protected review directory. Inspect exact
 partial paths before cleanup; never remove a JDK used by an installed unit.
@@ -121,10 +121,10 @@ review the complete resulting unit and record its new hash. The fixed arguments,
 `UnsetEnvironment`, key permissions and all sandbox settings must remain intact.
 
 ```bash
-sudo sed -i 's|^ExecStart=/usr/bin/java |ExecStart=/opt/stargate/jdk-25.0.5+8/bin/java |' /root/stargate-tls-renewal-review/stargate-tls-renewal.service
+sudo sed -i 's|^ExecStart=/usr/bin/java |ExecStart=/opt/stargate/jdk-25.0.5.1+2/bin/java |' /root/stargate-tls-renewal-review/stargate-tls-renewal.service
 sudo grep '^ExecStart=' /root/stargate-tls-renewal-review/stargate-tls-renewal.service
 sudo sha256sum /root/stargate-tls-renewal-review/stargate-tls-renewal.service
-sudo namei -l /opt/stargate/jdk-25.0.5+8/bin/java
+sudo namei -l /opt/stargate/jdk-25.0.5.1+2/bin/java
 ```
 
 Expect exactly one `ExecStart`, beginning with that protected executable. A path
@@ -133,9 +133,9 @@ executable is a stop condition. Check actual sandbox access before activating
 certificate staging; these transient probes run version checks only:
 
 ```bash
-sudo systemd-run --wait --pipe --collect --property=User=root --property=ProtectHome=true --property=ProtectSystem=strict --property=PrivateTmp=true --property=PrivateNetwork=true --property=NoNewPrivileges=true /usr/bin/env -i PATH=/usr/bin:/bin /opt/stargate/jdk-25.0.5+8/bin/java --version
-sudo systemd-run --wait --pipe --collect --property=User=root --property=ProtectHome=true --property=ProtectSystem=strict --property=PrivateTmp=true --property=PrivateNetwork=true --property=NoNewPrivileges=true /usr/bin/env -i PATH=/usr/bin:/bin /opt/stargate/jdk-25.0.5+8/bin/javac --version
-sudo systemd-run --wait --pipe --collect --property=User=root --property=ProtectHome=true --property=ProtectSystem=strict --property=PrivateTmp=true --property=PrivateNetwork=true --property=NoNewPrivileges=true /usr/bin/env -i PATH=/usr/bin:/bin /opt/stargate/jdk-25.0.5+8/bin/jlink --version
+sudo systemd-run --wait --pipe --collect --property=User=root --property=ProtectHome=true --property=ProtectSystem=strict --property=PrivateTmp=true --property=PrivateNetwork=true --property=NoNewPrivileges=true /usr/bin/env -i PATH=/usr/bin:/bin /opt/stargate/jdk-25.0.5.1+2/bin/java --version
+sudo systemd-run --wait --pipe --collect --property=User=root --property=ProtectHome=true --property=ProtectSystem=strict --property=PrivateTmp=true --property=PrivateNetwork=true --property=NoNewPrivileges=true /usr/bin/env -i PATH=/usr/bin:/bin /opt/stargate/jdk-25.0.5.1+2/bin/javac --version
+sudo systemd-run --wait --pipe --collect --property=User=root --property=ProtectHome=true --property=ProtectSystem=strict --property=PrivateTmp=true --property=PrivateNetwork=true --property=NoNewPrivileges=true /usr/bin/env -i PATH=/usr/bin:/bin /opt/stargate/jdk-25.0.5.1+2/bin/jlink --version
 ```
 
 Expect the same versions and exit status zero. Continue the TLS guide's reviewed

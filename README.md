@@ -26,18 +26,18 @@ make private browsing supported. Brave private windows can connect outside Starg
 
 [<img src="docs/media/readme/get-firefox-badge.svg" alt="Get Stargate on Mozilla Add-ons" width="264">](https://addons.mozilla.org/en-US/firefox/addon/stargate-browser-proxy/)
 
-[Open the v0.1.0-rc.3 downloads](https://github.com/zcat-app/stargate-v2/releases/tag/v0.1.0-rc.3)
-— a testing prerelease for Linux amd64. The GitHub extension packages are
-version **0.8.8**; Firefox **0.8.9** is available from Mozilla Add-ons.
+[Open the v0.1.0 downloads](https://github.com/zcat-app/stargate-v2/releases/tag/v0.1.0)
+— the stable server release for Linux amd64. The extension packages are
+version **0.8.9**. See the [changelog](CHANGELOG.md).
 
 - **Firefox:** install from
   [Mozilla Add-ons](https://addons.mozilla.org/en-US/firefox/addon/stargate-browser-proxy/)
-  (signed **0.8.9**, permanent install, automatic updates), or load the RC's
-  unsigned `stargate-firefox.xpi` (**0.8.8**) temporarily using the
+  (signed **0.8.9**, permanent install, automatic updates), or load the release's
+  unsigned `stargate-firefox.xpi` (**0.8.9**) temporarily using the
   [Firefox instructions](docs/getting-started.md#firefox).
 - **Brave:** `stargate-brave.zip` — extract it and follow the
   [Brave instructions](docs/getting-started.md#brave).
-- **Server operators:** get `stargate-operator-v0.1.0-rc.3.tar.gz` from the same
+- **Server operators:** get `stargate-operator-v0.1.0.tar.gz` from the same
   release, verify it, unpack it and follow `START-HERE.md`. Images are included
   as separate downloads.
 
@@ -47,7 +47,7 @@ This includes the Firefox and Brave extension packages.
 Firefox is published on
 [Mozilla Add-ons](https://addons.mozilla.org/en-US/firefox/addon/stargate-browser-proxy/):
 a Mozilla-signed permanent-install package with automatic updates. The GitHub
-RC's XPI remains an unsigned temporary-load fallback. Brave is distributed on
+release's XPI remains an unsigned temporary-load fallback. Brave is distributed on
 GitHub with manual installation and updates. See
 [downloads and verification](docs/release-readiness.md).
 

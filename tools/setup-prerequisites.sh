@@ -31,7 +31,7 @@ if [[ -z "$PROFILE" ]]; then
   case ${choice:-1} in 1) PROFILE=images;; 2) PROFILE=tools;; 3) PROFILE=build;; *) fail 'Choose 1, 2 or 3.';; esac
 fi
 [[ "$PROFILE" == images || "$PROFILE" == tools || "$PROFILE" == build ]] || fail 'Select images, tools or build.'
-version_pattern='^[[:space:]]*\{[[:space:]]*"version"[[:space:]]*:[[:space:]]*"(25\.[0-9]+\.[0-9]+)"[[:space:]]*\}[[:space:]]*$'
+version_pattern='^[[:space:]]*\{[[:space:]]*"version"[[:space:]]*:[[:space:]]*"(25(\.[0-9]+){2,3})"[[:space:]]*\}[[:space:]]*$'
 pin=$(< "$ROOT/containers/java-runtime.json")
 [[ "$pin" =~ $version_pattern ]] || fail 'Invalid shared Java version declaration.'
 JAVA_REQUIRED=${BASH_REMATCH[1]}

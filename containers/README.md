@@ -191,7 +191,7 @@ bash tools/with-toolchain.sh mvn --offline --batch-mode --no-transfer-progress -
 
 ### Build with the existing prepared builder
 
-Prepare images on Linux with the verified Java 25.0.5 JDK and Maven 3.10.0:
+Prepare images on Linux with the verified Java 25.0.5.1 JDK and Maven 3.10.0:
 
 Image-input preparation and runtime-file collection now use Java 25:
 see [the current procedure](../docs/image-input-preparation.md).
@@ -201,7 +201,6 @@ and [libc build commands](../docs/libc-build-tools.md). Native source package
 maintainer tools retain their upstream build requirements.
 
 ```sh
-bash tools/build_container_libc.sh
 bash tools/with-toolchain.sh mvn --offline --batch-mode --no-transfer-progress -pl native-tools -am package
 bash tools/build_i2p.sh
 bash tools/with-toolchain.sh mvn --batch-mode --no-transfer-progress package

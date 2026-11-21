@@ -29,6 +29,7 @@ done
 for tool in jq gpg gpgconf sha256sum realpath cp find mv; do command -v "$tool" >/dev/null || fail "Missing prerequisite: $tool"; done
 release=$(realpath -e -- "$release"); inputs=$(realpath -e -- "$inputs")
 pin="$root/containers/simplex-alert/release.json"
+version=$(jq -er '.version | select(test("^v[0-9]+(\\.[0-9]+){2}$"))' "$pin")
 hash=$(jq -er '.sha256 | select(test("^[0-9a-f]{64}$"))' "$pin")
 signer=$(jq -er '.signingFingerprint | select(test("^[0-9A-F]{40}$"))' "$pin")
 artifact=$(jq -er '.artifact | select(test("^[A-Za-z0-9_./-]+$"))' "$pin")
@@ -70,9 +71,9 @@ printf '%s  %s\n' "$expected_hash" "$stage/simplex-chat" | sha256sum --check --s
 "${gpg_args[@]}" --status-fd 1 --verify "$stage/provenance/_sha256sums.asc" "$stage/provenance/_sha256sums" > "$gpg_home/status" 2> "$gpg_home/diagnostics" || fail 'Copied release signature verification failed.'
 awk -v signer="$signer" '$1=="[GNUPG:]" && $2=="VALIDSIG" && ($3==signer || $NF==signer) {matched=1} END {exit !matched}' "$gpg_home/status" || fail 'Copied release signer differs from the independent pin.'
 [[ $(grep -Fxc -- "$expected_hash  $artifact" "$stage/provenance/_sha256sums") == 1 ]] || fail 'Copied manifest differs from the pinned artifact.'
-cat > "$stage/provenance/NOTICE" <<'NOTICE'
+cat > "$stage/provenance/NOTICE" <<NOTICE
 SimpleX Chat upstream binary, AGPL-3.0. Corresponding version source:
-https://github.com/simplex-chat/simplex-chat/tree/v7.0.0
+https://github.com/simplex-chat/simplex-chat/tree/$version
 Signature key matched the officially published fingerprint;
 this is not independent out-of-band owner authentication.
 NOTICE

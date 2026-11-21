@@ -1,0 +1,6 @@
+{
+  "package": "libc6",
+  "version": "2.39-0ubuntu8.12",
+  "url": "https://security.ubuntu.com/ubuntu/pool/main/g/glibc/libc6_2.39-0ubuntu8.12_amd64.deb",
+  "sha256": "d821b41fc59cb4978ecd53bc83e5c964ac15d305c8d2ac4c8a35aebe55010fb9"
+}

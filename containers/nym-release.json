@@ -1,7 +1,7 @@
 {
-  "tag": "nym-binaries-v2026.20-glasgow",
-  "version": "1.1.87",
-  "commit": "28904698fd68337cc722d51ab21f29f4fd6c56ce",
-  "url": "https://github.com/nymtech/nym/releases/download/nym-binaries-v2026.20-glasgow/nym-socks5-client",
-  "sha256": "2add7393466a862469c5d71fd82db66d0bf05abbd5e580116df4b8c3a1f5ee82"
+  "tag": "nym-binaries-v2026.22-istanbul",
+  "version": "1.1.89",
+  "commit": "1abb0cf1b92f135e71c84b738bcd19b97916a3eb",
+  "url": "https://github.com/nymtech/nym/releases/download/nym-binaries-v2026.22-istanbul/nym-socks5-client",
+  "sha256": "d7d39f6a7fe331db6ac24503da54e195d960c93fed60313876bc7c1e34266f30"
 }

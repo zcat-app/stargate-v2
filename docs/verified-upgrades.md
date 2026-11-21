@@ -5,7 +5,7 @@ commands, Git branches or build scripts from the manager. Only the four existing
 services (`app`, `tor`, `i2p`, `nym`) are supported. It replaces the listed services
 only. Ordinary web remains on Nym. SimpleX alerts cannot trigger upgrades.
 
-Use the [rc.3 operator bundle](https://github.com/zcat-app/stargate-v2/releases/tag/v0.1.0-rc.3)
+Use the [v0.1.0 operator bundle](https://github.com/zcat-app/stargate-v2/releases/tag/v0.1.0)
 for the corrected host helper. Unpacking does not replace a running worker; follow
 the operator setup and interrupted-operation checks below.
 
@@ -231,13 +231,34 @@ sha256sum ./checked-libc
 docker rm --volumes "$validation_id"
 ```
 
-Repeat for other selected regular files. Keep I2P/Nym patched executables in the
-policy when updating other parts of those images. Changing a protected executable
-correctly blocks installation: a new patched native-client build requires a
-separately reviewed policy transition, not deletion of a failing guard. The
-example preserves libc only for app/Tor; include it for I2P/Nym too when they
-contain the retained libc backport. Source-patch hashes alone are not application
-proof. Image runtime defaults (user, entrypoint, environment, health check, etc.)
+Repeat for other selected regular files. Keep I2P/Nym patched executables and libc in the policy when updating images
+that contain them. Exact byte equality is the default. For an intentional
+change, the operator can add a reviewed `runtimeTransitions` entry to the
+private configuration before preparing the transaction:
+
+```json
+{
+  "runtimeTransitions": {
+    "nym": {
+      "fromImage": "sha256:CURRENT_IMAGE_ID",
+      "toImage": "sha256:CANDIDATE_IMAGE_ID",
+      "files": {
+        "/opt/nym/nym-socks5-client": "CANDIDATE_EXECUTABLE_SHA256"
+      }
+    }
+  }
+}
+```
+
+Keep each old file hash in `preserve`. The optional entry authorizes only the
+listed byte changes for that exact image pair in the signed release. Every
+other protected path must still match its original hash. The worker verifies
+the old and new bytes before installation, and it rechecks the old bytes before
+rollback. Review the new bytes and upstream provenance independently before
+pinning them. The config is frozen for the transaction, including during
+rollback. After ending the transaction and closing its rollback window, prepare
+the next policy separately and retain the old transaction records. Source-patch
+hashes alone are not application proof. Image runtime defaults (user, entrypoint, environment, health check, etc.)
 must remain equal; migrations and runtime-contract changes need a separate
 reviewed procedure. Non-default device I/O limits and Compose `deploy` resource
 policies are unsupported and refused; ordinary configured resource limits are

@@ -1,11 +1,11 @@
 # Copyright 2026 The Stargate Authors; SPDX-License-Identifier: Apache-2.0
 # Fixed release inputs. Updating these requires artifact/signature verification.
-JAVA_SETUP_VERSION=25.0.5
-JAVA_SETUP_BUILD=25.0.5+8
-JAVA_SETUP_ROOT=jdk-25.0.5+8
-JAVA_SETUP_URL='https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25.0.5%2B8/OpenJDK25U-jdk_x64_linux_hotspot_25.0.5_8.tar.gz'
+JAVA_SETUP_VERSION=25.0.5.1
+JAVA_SETUP_BUILD=25.0.5.1+2
+JAVA_SETUP_ROOT=jdk-25.0.5.1+2
+JAVA_SETUP_URL='https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25.0.5.1%2B2/OpenJDK25U-jdk_x64_linux_hotspot_25.0.5.1_2.tar.gz'
 JAVA_SETUP_SIGNATURE_URL="$JAVA_SETUP_URL.sig"
-JAVA_SETUP_SHA256=68982529869257d0ee6b824ec5aa270ff8b118bb438670da0b97ebdab178d7fb
+JAVA_SETUP_SHA256=760f91b22c3efc9bd1b64ff950598231be82928cc807e30691a0e7a2995a62c0
 JAVA_SETUP_KEY_SHA256=a46d5d3ab75c3c86dddf1bfd2957a067a24b1c6b2d2ed2bc69294bf970c5160b
 JAVA_SETUP_KEY_FINGERPRINT=3B04D753C9050D9A5D343F39843C48A565F8F04B
 DOCKER_SETUP_KEY_SHA256=1500c1f56fa9e26b9b8f42452a553675796ade0807cdce11975eb98170b3a570

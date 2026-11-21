@@ -132,6 +132,35 @@ class UpdateTest {
         assertThrows(Exception.class,()->f.engine.apply(plan,false));assertFalse(f.calls.stream().anyMatch(c->c.contains("up")));assertEquals(OLD,f.engine.image);assertEquals("PREPARED",f.engine.state.path("phase").asText());
         f.engine.defaultsDrift=false;f.engine.apply(plan,false);f.engine.apply(plan,true);assertEquals("ROLLED_BACK",f.engine.state.path("phase").asText());
     }
+    @Test void runtimeTransitionPinsBothImagesAndKeepsOtherFilesProtected() throws Exception {
+        var f = fixture();
+        var config = (ObjectNode) json(f.config);
+        config.withObject("/preserve/app").put("/unchanged", "a".repeat(64));
+        config.putObject("runtimeTransitions").putObject("app").put("fromImage", OLD).put("toImage", NEW)
+                .putObject("files").put("/lib/patched-libc", "b".repeat(64));
+        write(f.config, config, false);
+        f.engine = new Fake(f.config, f.engine.commands);
+        var e = f.engine;
+        e.refresh();
+        String plan = e.state.path("plan").asText();
+        assertEquals(hash("libc".getBytes()), e.preservedDigest("app", OLD, "/lib/patched-libc").asText());
+        assertEquals("b".repeat(64), e.preservedDigest("app", NEW, "/lib/patched-libc").asText());
+        assertEquals("a".repeat(64), e.preservedDigest("app", NEW, "/unchanged").asText());
+        assertThrows(Exception.class, () -> e.preservedDigest("app", "sha256:" + "3".repeat(64), "/unchanged"));
+        e.apply(plan, false);
+        e.apply(plan, true);
+        assertEquals(List.of(OLD, NEW, OLD), e.preserved);
+        ((ObjectNode) f.doc.path("changes").get(0)).put("toImage", "sha256:" + "3".repeat(64));
+        f.signRelease();
+        int replacements = (int) f.calls.stream().filter(c -> c.contains("up")).count();
+        assertThrows(Exception.class, e::refresh);
+        assertEquals(replacements, f.calls.stream().filter(c -> c.contains("up")).count());
+        config.withObject("/runtimeTransitions/app/files").put("/not-protected", "c".repeat(64));
+        config.put("workDirectory", tmp.resolve("second-work").toString());
+        write(f.config, config, false);
+        assertThrows(Exception.class, () -> new Fake(f.config, e.commands));
+    }
+
     void openssl(String pass,String...args)throws Exception {
         var command=new ArrayList<>(List.of("/usr/bin/openssl"));command.addAll(List.of(args));var p=new ProcessBuilder(command).redirectErrorStream(true).start();try(var stdin=p.getOutputStream()){stdin.write((pass+"\n").getBytes());}assertTrue(p.waitFor(10,java.util.concurrent.TimeUnit.SECONDS));assertEquals(0,p.exitValue(),()->{try{return new String(p.getInputStream().readAllBytes());}catch(Exception e){return "output unavailable";}});
     }
