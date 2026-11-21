@@ -11,6 +11,8 @@ supports Ubuntu 24.04 amd64; other Linux hosts need [manual setup](setup-prerequ
 | app-image.tar, tor-image.tar, i2p-image.tar, nym-image.tar | Four core container images |
 | simplex-alert-image.tar | Optional SimpleX 7.1.4 alert runtime |
 | release.json | Signed core updater manifest |
+| image-ids.json | Exact image IDs and Compose tags |
+| runtime-transition.json | Core image and file hash pins for operator review |
 | stargate-firefox.xpi, stargate-brave.zip | Extension 0.8.9 for temporary/unpacked loading |
 | stargate-release-public.der | Public Ed25519 verification key |
 
